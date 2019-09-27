@@ -59,7 +59,7 @@ func newNormalizer(stmt Statement, bindVars map[string]*querypb.BindVariable, pr
 // WalkStatement is the top level walk function.
 // If it encounters a Select, it switches to a mode
 // where variables are deduped.
-func (nz *normalizer) WalkStatement(ctx interface{}, node SQLNode) (bool, error) {
+func (nz *normalizer) WalkStatement(action string, ctx interface{}, node SQLNode) (bool, error) {
 	switch node := node.(type) {
 	case *Select:
 		_ = Walk(nil, nz.WalkSelect, node)
@@ -74,7 +74,7 @@ func (nz *normalizer) WalkStatement(ctx interface{}, node SQLNode) (bool, error)
 }
 
 // WalkSelect normalizes the AST in Select mode.
-func (nz *normalizer) WalkSelect(ctx interface{}, node SQLNode) (bool, error) {
+func (nz *normalizer) WalkSelect(action string, ctx interface{}, node SQLNode) (bool, error) {
 	switch node := node.(type) {
 	case *SQLVal:
 		nz.convertSQLValDedup(node)
@@ -209,7 +209,7 @@ func (nz *normalizer) newName() string {
 // Ideally, this should be done only once.
 func GetBindvars(stmt Statement) map[string]struct{} {
 	bindvars := make(map[string]struct{})
-	_ = Walk(nil, func(ctx interface{}, node SQLNode) (kontinue bool, err error) {
+	_ = Walk(nil, func(action string, ctx interface{}, node SQLNode) (kontinue bool, err error) {
 		switch node := node.(type) {
 		case *SQLVal:
 			if node.Type == ValArg {

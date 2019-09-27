@@ -157,7 +157,7 @@ type SQLNode interface {
 
 // Visit defines the signature of a function that
 // can be used to visit all nodes of a parse tree.
-type Visit func(ctx interface{}, node SQLNode) (kontinue bool, err error)
+type Visit func(action string, ctx interface{}, node SQLNode) (kontinue bool, err error)
 
 // Walk calls visit on every node.
 // If visit returns true, the underlying nodes
@@ -170,18 +170,30 @@ func Walk(ctx interface{}, visit Visit, nodes ...SQLNode) error {
 		if node == nil {
 			continue
 		}
-		kontinue, err := visit(ctx, node)
+		kontinue, err := visitOneNode(ctx, visit, node)
 		if err != nil {
 			return err
 		}
-		if kontinue {
-			err = node.walkSubtree(ctx, visit)
-			if err != nil {
-				return err
-			}
+		if !kontinue {
+			return nil
 		}
 	}
 	return nil
+}
+
+func visitOneNode(ctx interface{}, visit Visit, node SQLNode) (bool, error) {
+	kontinue, err := visit("enter", ctx, node)
+	defer visit("exit", ctx, node)
+	if err != nil {
+		return false, err
+	}
+	if kontinue {
+		err = node.walkSubtree(ctx, visit)
+		if err != nil {
+			return false, err
+		}
+	}
+	return kontinue, nil
 }
 
 // String returns a string representation of an SQLNode.
