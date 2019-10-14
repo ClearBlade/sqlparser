@@ -3428,6 +3428,10 @@ func (node TableIdent) String() string {
 	return node.v
 }
 
+func (node TableIdent) Set(val string) {
+	node.v = val
+}
+
 // CompliantName returns a compliant id name
 // that can be used for a bind var.
 func (node TableIdent) CompliantName() string {
