@@ -38,7 +38,7 @@ type bindLocation struct {
 // NewParsedQuery returns a ParsedQuery of the ast.
 func NewParsedQuery(node SQLNode) *ParsedQuery {
 	buf := NewTrackedBuffer(nil)
-	buf.Myprintf("%v", node)
+	buf.Myprintf(nil, "%v", node)
 	return buf.ParsedQuery()
 }
 

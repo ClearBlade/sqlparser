@@ -48,8 +48,8 @@ func NewTrackedBuffer(nodeFormatter NodeFormatter) *TrackedBuffer {
 
 // WriteNode function, initiates the writing of a single SQLNode tree by passing
 // through to Myprintf with a default format string
-func (buf *TrackedBuffer) WriteNode(node SQLNode) *TrackedBuffer {
-	buf.Myprintf("%v", node)
+func (buf *TrackedBuffer) WriteNode(ctx Rewriter, node SQLNode) *TrackedBuffer {
+	buf.Myprintf(ctx, "%v", node)
 	return buf
 }
 
@@ -59,7 +59,7 @@ func (buf *TrackedBuffer) WriteNode(node SQLNode) *TrackedBuffer {
 //
 // The name must be something other than the usual Printf() to avoid "go vet"
 // warnings due to our custom format specifiers.
-func (buf *TrackedBuffer) Myprintf(format string, values ...interface{}) {
+func (buf *TrackedBuffer) Myprintf(ctx Rewriter, format string, values ...interface{}) {
 	end := len(format)
 	fieldnum := 0
 	for i := 0; i < end; {
@@ -96,8 +96,7 @@ func (buf *TrackedBuffer) Myprintf(format string, values ...interface{}) {
 		case 'v':
 			node := values[fieldnum].(SQLNode)
 			if buf.nodeFormatter == nil {
-				fmt.Printf("CALLING NODE.FORMAT\n")
-				node.Format(buf)
+				node.Format(ctx, buf)
 			} else {
 				buf.nodeFormatter(buf, node)
 			}
@@ -136,6 +135,6 @@ func (buf *TrackedBuffer) HasBindVars() bool {
 // BuildParsedQuery builds a ParsedQuery from the input.
 func BuildParsedQuery(in string, vars ...interface{}) *ParsedQuery {
 	buf := NewTrackedBuffer(nil)
-	buf.Myprintf(in, vars...)
+	buf.Myprintf(nil, in, vars...)
 	return buf.ParsedQuery()
 }

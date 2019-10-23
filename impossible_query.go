@@ -27,13 +27,13 @@ package sqlparser
 func FormatImpossibleQuery(buf *TrackedBuffer, node SQLNode) {
 	switch node := node.(type) {
 	case *Select:
-		buf.Myprintf("select %v from %v where 1 != 1", node.SelectExprs, node.From)
+		buf.Myprintf(nil, "select %v from %v where 1 != 1", node.SelectExprs, node.From)
 		if node.GroupBy != nil {
-			node.GroupBy.Format(buf)
+			node.GroupBy.Format(nil, buf)
 		}
 	case *Union:
-		buf.Myprintf("%v %s %v", node.Left, node.Type, node.Right)
+		buf.Myprintf(nil, "%v %s %v", node.Left, node.Type, node.Right)
 	default:
-		node.Format(buf)
+		node.Format(nil, buf)
 	}
 }
