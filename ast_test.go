@@ -58,14 +58,14 @@ func TestSelect(t *testing.T) {
 	sel := &Select{}
 	sel.AddWhere(expr)
 	buf := NewTrackedBuffer(nil)
-	sel.Where.Format(buf)
+	sel.Where.Format(nil, buf)
 	want := " where a = 1"
 	if buf.String() != want {
 		t.Errorf("where: %q, want %s", buf.String(), want)
 	}
 	sel.AddWhere(expr)
 	buf = NewTrackedBuffer(nil)
-	sel.Where.Format(buf)
+	sel.Where.Format(nil, buf)
 	want = " where a = 1 and a = 1"
 	if buf.String() != want {
 		t.Errorf("where: %q, want %s", buf.String(), want)
@@ -73,14 +73,14 @@ func TestSelect(t *testing.T) {
 	sel = &Select{}
 	sel.AddHaving(expr)
 	buf = NewTrackedBuffer(nil)
-	sel.Having.Format(buf)
+	sel.Having.Format(nil, buf)
 	want = " having a = 1"
 	if buf.String() != want {
 		t.Errorf("having: %q, want %s", buf.String(), want)
 	}
 	sel.AddHaving(expr)
 	buf = NewTrackedBuffer(nil)
-	sel.Having.Format(buf)
+	sel.Having.Format(nil, buf)
 	want = " having a = 1 and a = 1"
 	if buf.String() != want {
 		t.Errorf("having: %q, want %s", buf.String(), want)
@@ -95,7 +95,7 @@ func TestSelect(t *testing.T) {
 	sel = &Select{}
 	sel.AddWhere(expr)
 	buf = NewTrackedBuffer(nil)
-	sel.Where.Format(buf)
+	sel.Where.Format(nil, buf)
 	want = " where (a = 1 or b = 1)"
 	if buf.String() != want {
 		t.Errorf("where: %q, want %s", buf.String(), want)
@@ -103,7 +103,7 @@ func TestSelect(t *testing.T) {
 	sel = &Select{}
 	sel.AddHaving(expr)
 	buf = NewTrackedBuffer(nil)
-	sel.Having.Format(buf)
+	sel.Having.Format(nil, buf)
 	want = " having (a = 1 or b = 1)"
 	if buf.String() != want {
 		t.Errorf("having: %q, want %s", buf.String(), want)
@@ -124,7 +124,7 @@ func TestRemoveHints(t *testing.T) {
 			sel.From[0].(*AliasedTableExpr).RemoveHints(),
 		}
 		buf := NewTrackedBuffer(nil)
-		sel.Format(buf)
+		sel.Format(nil, buf)
 		if got, want := buf.String(), "select * from t"; got != want {
 			t.Errorf("stripped query: %s, want %s", got, want)
 		}
@@ -143,7 +143,7 @@ func TestAddOrder(t *testing.T) {
 	}
 	dst.(*Select).AddOrder(order)
 	buf := NewTrackedBuffer(nil)
-	dst.Format(buf)
+	dst.Format(nil, buf)
 	want := "select * from t order by foo asc"
 	if buf.String() != want {
 		t.Errorf("order: %q, want %s", buf.String(), want)
@@ -154,7 +154,7 @@ func TestAddOrder(t *testing.T) {
 	}
 	dst.(*Union).AddOrder(order)
 	buf = NewTrackedBuffer(nil)
-	dst.Format(buf)
+	dst.Format(nil, buf)
 	want = "select * from t union select * from s order by foo asc"
 	if buf.String() != want {
 		t.Errorf("order: %q, want %s", buf.String(), want)
@@ -173,7 +173,7 @@ func TestSetLimit(t *testing.T) {
 	}
 	dst.(*Select).SetLimit(limit)
 	buf := NewTrackedBuffer(nil)
-	dst.Format(buf)
+	dst.Format(nil, buf)
 	want := "select * from t limit 4"
 	if buf.String() != want {
 		t.Errorf("limit: %q, want %s", buf.String(), want)
@@ -184,7 +184,7 @@ func TestSetLimit(t *testing.T) {
 	}
 	dst.(*Union).SetLimit(limit)
 	buf = NewTrackedBuffer(nil)
-	dst.Format(buf)
+	dst.Format(nil, buf)
 	want = "select * from t union select * from s limit 4"
 	if buf.String() != want {
 		t.Errorf("order: %q, want %s", buf.String(), want)
@@ -194,13 +194,13 @@ func TestSetLimit(t *testing.T) {
 func TestWhere(t *testing.T) {
 	var w *Where
 	buf := NewTrackedBuffer(nil)
-	w.Format(buf)
+	w.Format(nil, buf)
 	if buf.String() != "" {
 		t.Errorf("w.Format(nil): %q, want \"\"", buf.String())
 	}
 	w = NewWhere(WhereStr, nil)
 	buf = NewTrackedBuffer(nil)
-	w.Format(buf)
+	w.Format(nil, buf)
 	if buf.String() != "" {
 		t.Errorf("w.Format(&Where{nil}: %q, want \"\"", buf.String())
 	}
@@ -352,7 +352,7 @@ func TestReplaceExpr(t *testing.T) {
 			t.Fatal(err)
 		}
 		var from *Subquery
-		_ = Walk(func(node SQLNode) (kontinue bool, err error) {
+		_ = Walk(nil, func(action string, ctx interface{}, node SQLNode) (kontinue bool, err error) {
 			if sq, ok := node.(*Subquery); ok {
 				from = sq
 				return false, nil

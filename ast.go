@@ -3163,11 +3163,10 @@ func (node *Limit) Format(ctx Rewriter, buf *TrackedBuffer) {
 	if node == nil {
 		return
 	}
-	buf.Myprintf(ctx, " limit ")
+	buf.Myprintf(ctx, " limit %v", node.Rowcount)
 	if node.Offset != nil {
-		buf.Myprintf(ctx, "%v, ", node.Offset)
+		buf.Myprintf(ctx, " offset %v", node.Offset)
 	}
-	buf.Myprintf(ctx, "%v", node.Rowcount)
 }
 
 func (node *Limit) walkSubtree(ctx interface{}, visit Visit) error {

@@ -141,7 +141,7 @@ func TestGenerateQuery(t *testing.T) {
 			continue
 		}
 		buf := NewTrackedBuffer(nil)
-		buf.Myprintf("%v", tree)
+		buf.Myprintf(nil, "%v", tree)
 		pq := buf.ParsedQuery()
 		bytes, err := pq.GenerateQuery(tcase.bindVars, tcase.extras)
 		var got string
