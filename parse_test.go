@@ -511,7 +511,7 @@ var (
 	}, {
 		input: "select /* limit a */ 1 from t limit a",
 	}, {
-		input: "select /* limit a,b */ 1 from t limit a, b",
+		input: "select /* limit a offset b */ 1 from t limit a offset b",
 	}, {
 		input:  "select /* binary unary */ a- -b from t",
 		output: "select /* binary unary */ a - -b from t",
