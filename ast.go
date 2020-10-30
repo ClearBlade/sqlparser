@@ -783,7 +783,7 @@ func (node *PartitionSpec) Format(ctx Rewriter, buf *TrackedBuffer) {
 	}
 }
 
-func (node *PartitionSpec) walkSubtree(ctx, visit Visit) error {
+func (node *PartitionSpec) walkSubtree(ctx interface{}, visit Visit) error {
 	if node == nil {
 		return nil
 	}
@@ -2851,7 +2851,7 @@ func (node *SubstrExpr) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 // ConvertExpr represents a call to CONVERT(expr, type)
-// or it's equivalent CAST(expr AS type). Both are rewritten to the former.
+// or it's equivalent CAST(expr AS type). Both are rewritten to the latter.
 type ConvertExpr struct {
 	Expr Expr
 	Type *ConvertType
@@ -2859,7 +2859,7 @@ type ConvertExpr struct {
 
 // Format formats the node.
 func (node *ConvertExpr) Format(ctx Rewriter, buf *TrackedBuffer) {
-	buf.Myprintf(ctx, "convert(%v, %v)", node.Expr, node.Type)
+	buf.Myprintf(ctx, "CAST(%v AS %v)", node.Expr, node.Type)
 }
 
 func (node *ConvertExpr) walkSubtree(ctx interface{}, visit Visit) error {

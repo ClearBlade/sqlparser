@@ -316,7 +316,7 @@ func TestReplaceExpr(t *testing.T) {
 		out: "substr(a, b, :a)",
 	}, {
 		in:  "select * from t where convert((select a from b), json)",
-		out: "convert(:a, json)",
+		out: "CAST(:a AS json)",
 	}, {
 		in:  "select * from t where convert((select a from b) using utf8)",
 		out: "convert(:a using utf8)",
