@@ -322,7 +322,11 @@ func encodeBytesSQL(val []byte, b BinWriter) {
 	buf := &bytes2.Buffer{}
 	buf.WriteByte('\'')
 	for _, ch := range val {
-		if encodedChar := SQLEncodeMap[ch]; encodedChar == DontEscape {
+		if ch == '\'' {
+			// escape single quotes by doubling them up
+			buf.WriteByte(ch)
+			buf.WriteByte(ch)
+		} else if encodedChar := SQLEncodeMap[ch]; encodedChar == DontEscape {
 			buf.WriteByte(ch)
 		} else {
 			buf.WriteByte('\\')
@@ -352,7 +356,6 @@ var SQLDecodeMap [256]byte
 
 var encodeRef = map[byte]byte{
 	'\x00': '0',
-	'\'':   '\'',
 	'"':    '"',
 	'\b':   'b',
 	'\n':   'n',

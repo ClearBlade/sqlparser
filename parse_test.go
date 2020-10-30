@@ -442,20 +442,21 @@ var (
 		input:  "select /* double quoted string */ \"a\" from t",
 		output: "select /* double quoted string */ 'a' from t",
 	}, {
-		input:  "select /* quote quote in string */ 'a''a' from t",
-		output: "select /* quote quote in string */ 'a\\'a' from t",
+		input: "select /* quote quote in string */ 'a''a' from t",
 	}, {
 		input:  "select /* double quote quote in string */ \"a\"\"a\" from t",
 		output: "select /* double quote quote in string */ 'a\\\"a' from t",
 	}, {
 		input:  "select /* quote in double quoted string */ \"a'a\" from t",
-		output: "select /* quote in double quoted string */ 'a\\'a' from t",
+		output: "select /* quote in double quoted string */ 'a''a' from t",
 	}, {
-		input: "select /* backslash quote in string */ 'a\\'a' from t",
+		input:  "select /* backslash quote in string */ 'a\\'a' from t",
+		output: "select /* backslash quote in string */ 'a''a' from t",
 	}, {
 		input: "select /* literal backslash in string */ 'a\\\\na' from t",
 	}, {
 		input: "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
+		output: "select /* all escapes */ '\\0''\\\"\\b\\n\\r\\t\\Z\\\\' from t",
 	}, {
 		input:  "select /* non-escape */ '\\x' from t",
 		output: "select /* non-escape */ 'x' from t",
