@@ -2156,11 +2156,11 @@ value_expression:
   {
     $$ = &BinaryExpr{Left: $1, Operator: ShiftRightStr, Right: $3}
   }
-| column_name JSON_EXTRACT_OP value
+| value_expression JSON_EXTRACT_OP value
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONExtractOp, Right: $3}
   }
-| column_name JSON_UNQUOTE_EXTRACT_OP value
+| value_expression JSON_UNQUOTE_EXTRACT_OP value
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONUnquoteExtractOp, Right: $3}
   }

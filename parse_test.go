@@ -411,6 +411,8 @@ var (
 	}, {
 		input: "select /* -> */ a.b ->> 'ab' from t",
 	}, {
+		input: "select * from t where CAST(a AS json) ->> 'ab' > 1",
+	}, {
 		input: "select /* empty function */ 1 from t where a = b()",
 	}, {
 		input: "select /* function with 1 param */ 1 from t where a = b(c)",
@@ -455,7 +457,7 @@ var (
 	}, {
 		input: "select /* literal backslash in string */ 'a\\\\na' from t",
 	}, {
-		input: "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
+		input:  "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
 		output: "select /* all escapes */ '\\0''\\\"\\b\\n\\r\\t\\Z\\\\' from t",
 	}, {
 		input:  "select /* non-escape */ '\\x' from t",
