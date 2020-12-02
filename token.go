@@ -487,10 +487,35 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 			}
 		}
 		isDbSystemVariable := false
-		if ch == '@' && tkn.lastChar == '@' {
-			isDbSystemVariable = true
+		doFallthrough := false
+		if ch == '@' {
+			switch tkn.lastChar {
+			case '@':
+				tkn.next()
+				tkn.skipBlank()
+				if tkn.lastChar == '\'' {
+					return JSON_PATH_RETURN_RESULT_OP, nil
+				}
+				isDbSystemVariable = true
+			case '>', '?': // json op
+				doFallthrough = true
+			}
 		}
-		return tkn.scanIdentifier(byte(ch), isDbSystemVariable)
+		if !doFallthrough {
+			return tkn.scanIdentifier(byte(ch), isDbSystemVariable)
+		}
+		fallthrough
+	case ch == '@':
+		switch tkn.lastChar {
+		case '>':
+			tkn.next()
+			return JSON_FIRST_VALUE_CONTAIN_SECOND_OP, nil
+		case '?':
+			tkn.next()
+			return JSON_PATH_RETURN_OP, nil
+		default:
+			return int(ch), nil
+		}
 	case isDigit(ch):
 		return tkn.scanNumber(false)
 	case ch == ':':
@@ -517,10 +542,19 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 			}
 			return int(ch), nil
 		case '?':
-			tkn.posVarIndex++
-			buf := new(bytes2.Buffer)
-			fmt.Fprintf(buf, ":v%d", tkn.posVarIndex)
-			return VALUE_ARG, buf.Bytes()
+			tkn.skipBlank()
+			switch tkn.lastChar {
+			case '\'':
+				return JSON_TXT_STR_EXISTS_OP, nil
+			case '|':
+				tkn.next()
+				return JSON_TXT_ANY_STR_EXISTS_OP, nil
+			default:
+				tkn.posVarIndex++
+				buf := new(bytes2.Buffer)
+				fmt.Fprintf(buf, ":v%d", tkn.posVarIndex)
+				return VALUE_ARG, buf.Bytes()
+			}
 		case '.':
 			if isDigit(tkn.lastChar) {
 				return tkn.scanNumber(true)
@@ -543,7 +577,18 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				return int(ch), nil
 			}
 		case '#':
-			return tkn.scanCommentType1("#")
+			tkn.skipBlank()
+			switch tkn.lastChar {
+			case '>':
+				tkn.next()
+				if tkn.lastChar == '>' {
+					tkn.next()
+					return JSON_UNQUOTE_SUBOBJECT_OP, nil
+				}
+				return JSON_SUBOBJECT_OP, nil
+			default:
+				return tkn.scanCommentType1("#")
+			}
 		case '-':
 			switch tkn.lastChar {
 			case '-':
@@ -556,8 +601,9 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 					return JSON_UNQUOTE_EXTRACT_OP, nil
 				}
 				return JSON_EXTRACT_OP, nil
+			default:
+				return int(ch), nil
 			}
-			return int(ch), nil
 		case '<':
 			switch tkn.lastChar {
 			case '>':
@@ -575,6 +621,9 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				default:
 					return LE, nil
 				}
+			case '@':
+				tkn.next()
+				return JSON_FIRST_VALUE_CONTAINED_IN_SECOND_OP, nil
 			default:
 				return int(ch), nil
 			}

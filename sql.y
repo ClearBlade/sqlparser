@@ -150,6 +150,10 @@ func forceEOF(yylex interface{}) {
 // operators because the syntax is restricted enough that
 // they don't cause conflicts.
 %token <empty> JSON_EXTRACT_OP JSON_UNQUOTE_EXTRACT_OP
+%token <empty> JSON_SUBOBJECT_OP JSON_UNQUOTE_SUBOBJECT_OP
+%token <empty> JSON_TXT_STR_EXISTS_OP JSON_TXT_ANY_STR_EXISTS_OP JSON_TXT_ALL_STR_EXISTS_OP
+%token <empty> JSON_FIRST_VALUE_CONTAIN_SECOND_OP JSON_FIRST_VALUE_CONTAINED_IN_SECOND_OP
+%token <empty> JSON_PATH_RETURN_OP JSON_PATH_RETURN_RESULT_OP
 
 // DDL Tokens
 %token <bytes> CREATE ALTER DROP RENAME ANALYZE ADD
@@ -2163,6 +2167,42 @@ value_expression:
 | value_expression JSON_UNQUOTE_EXTRACT_OP value
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONUnquoteExtractOp, Right: $3}
+  }
+| value_expression JSON_SUBOBJECT_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONSubObjectOp, Right: $3}
+  }
+| value_expression JSON_UNQUOTE_SUBOBJECT_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONUnquoteSubObjectOp, Right: $3}
+  }
+| value_expression JSON_TXT_STR_EXISTS_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONTextStrExistsOP, Right: $3}
+  }
+| value_expression JSON_TXT_ANY_STR_EXISTS_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONTextAnyStrExistsOp, Right: $3}
+  }
+| value_expression JSON_TXT_ALL_STR_EXISTS_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONTextAllStrExistsOp, Right: $3}
+  }
+| value_expression JSON_FIRST_VALUE_CONTAIN_SECOND_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONFirstValueContainSecond, Right: $3}
+  }
+| value_expression JSON_FIRST_VALUE_CONTAINED_IN_SECOND_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONFirstValueContainedInSecond, Right: $3}
+  }
+| value_expression JSON_PATH_RETURN_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONPathReturnOp, Right: $3}
+  }
+| value_expression JSON_PATH_RETURN_RESULT_OP value
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: JSONPathReturnResultOp, Right: $3}
   }
 | value_expression COLLATE charset
   {
