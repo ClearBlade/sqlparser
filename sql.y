@@ -151,7 +151,7 @@ func forceEOF(yylex interface{}) {
 // they don't cause conflicts.
 %token <empty> JSON_EXTRACT_OP JSON_UNQUOTE_EXTRACT_OP
 %token <empty> JSON_SUBOBJECT_OP JSON_UNQUOTE_SUBOBJECT_OP
-%token <empty> JSON_TXT_STR_EXISTS_OP JSON_TXT_ANY_STR_EXISTS_OP JSON_TXT_ALL_STR_EXISTS_OP
+%token <empty> JSON_TXT_STR_EXISTS_OP
 %token <empty> JSON_FIRST_VALUE_CONTAIN_SECOND_OP JSON_FIRST_VALUE_CONTAINED_IN_SECOND_OP
 %token <empty> JSON_PATH_RETURN_OP JSON_PATH_RETURN_RESULT_OP
 
@@ -2179,14 +2179,6 @@ value_expression:
 | value_expression JSON_TXT_STR_EXISTS_OP value
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONTextStrExistsOP, Right: $3}
-  }
-| value_expression JSON_TXT_ANY_STR_EXISTS_OP value
-  {
-    $$ = &BinaryExpr{Left: $1, Operator: JSONTextAnyStrExistsOp, Right: $3}
-  }
-| value_expression JSON_TXT_ALL_STR_EXISTS_OP value
-  {
-    $$ = &BinaryExpr{Left: $1, Operator: JSONTextAllStrExistsOp, Right: $3}
   }
 | value_expression JSON_FIRST_VALUE_CONTAIN_SECOND_OP value
   {

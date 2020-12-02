@@ -546,9 +546,6 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 			switch tkn.lastChar {
 			case '\'':
 				return JSON_TXT_STR_EXISTS_OP, nil
-			case '|':
-				tkn.next()
-				return JSON_TXT_ANY_STR_EXISTS_OP, nil
 			default:
 				tkn.posVarIndex++
 				buf := new(bytes2.Buffer)

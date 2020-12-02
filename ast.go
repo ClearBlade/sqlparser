@@ -2153,8 +2153,6 @@ const (
 	JSONSubObjectOp                 = "#>"
 	JSONUnquoteSubObjectOp          = "#>>"
 	JSONTextStrExistsOP             = "?"
-	JSONTextAnyStrExistsOp          = "?|"
-	JSONTextAllStrExistsOp          = "?&"
 	JSONFirstValueContainSecond     = "@>"
 	JSONFirstValueContainedInSecond = "@>"
 	JSONPathReturnOp                = "@?"
