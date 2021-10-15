@@ -1624,19 +1624,19 @@ func TestConvert(t *testing.T) {
 		output string
 	}{{
 		input:  "select convert('abc' as date) from t",
-		output: "syntax error at position 24 near 'as'",
+		output: "syntax error: unexpected AS at position 24 near 'as'",
 	}, {
 		input:  "select convert from t",
-		output: "syntax error at position 20 near 'from'",
+		output: "syntax error: unexpected FROM, expecting '(' at position 20 near 'from'",
 	}, {
 		input:  "select cast('foo', decimal) from t",
-		output: "syntax error at position 19",
+		output: "syntax error: unexpected ',', expecting AS or OR or AND or IS at position 19",
 	}, {
 		input:  "select convert('abc', datetime(4+9)) from t",
-		output: "syntax error at position 34",
+		output: "syntax error: unexpected '+', expecting ')' at position 34",
 	}, {
 		input:  "select convert('abc', decimal(4+9)) from t",
-		output: "syntax error at position 33",
+		output: "syntax error: unexpected '+', expecting ',' or ')' at position 33",
 	}}
 
 	for _, tcase := range invalidSQL {
@@ -1968,34 +1968,34 @@ var (
 		excludeMulti bool // Don't use in the ParseNext multi-statement parsing tests.
 	}{{
 		input:  "select $ from t",
-		output: "syntax error at position 9 near '$'",
+		output: "syntax error: unexpected LEX_ERROR at position 9 near '$'",
 	}, {
 		input:  "select : from t",
-		output: "syntax error at position 9 near ':'",
+		output: "syntax error: unexpected LEX_ERROR at position 9 near ':'",
 	}, {
 		input:  "select 0xH from t",
-		output: "syntax error at position 10 near '0x'",
+		output: "syntax error: unexpected LEX_ERROR at position 10 near '0x'",
 	}, {
 		input:  "select x'78 from t",
-		output: "syntax error at position 12 near '78'",
+		output: "syntax error: unexpected LEX_ERROR at position 12 near '78'",
 	}, {
 		input:  "select x'777' from t",
-		output: "syntax error at position 14 near '777'",
+		output: "syntax error: unexpected LEX_ERROR at position 14 near '777'",
 	}, {
 		input:  "select * from t where :1 = 2",
-		output: "syntax error at position 24 near ':'",
+		output: "syntax error: unexpected LEX_ERROR at position 24 near ':'",
 	}, {
 		input:  "select * from t where :. = 2",
-		output: "syntax error at position 24 near ':'",
+		output: "syntax error: unexpected LEX_ERROR at position 24 near ':'",
 	}, {
 		input:  "select * from t where ::1 = 2",
-		output: "syntax error at position 25 near '::'",
+		output: "syntax error: unexpected LEX_ERROR at position 25 near '::'",
 	}, {
 		input:  "select * from t where ::. = 2",
-		output: "syntax error at position 25 near '::'",
+		output: "syntax error: unexpected LEX_ERROR at position 25 near '::'",
 	}, {
 		input:  "update a set c = values(1)",
-		output: "syntax error at position 26 near '1'",
+		output: "syntax error: unexpected INTEGRAL at position 26 near '1'",
 	}, {
 		input: "select(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F" +
 			"(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(" +
@@ -2015,70 +2015,70 @@ var (
 			"(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(" +
 			"F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F(F" +
 			"(F(F(F(F(F(F(F(F(F(F(F(",
-		output: "syntax error at position 404",
+		output: "syntax error: unexpected $end, expecting ')' at position 404",
 	}, {
 		// This construct is considered invalid due to a grammar conflict.
 		input:  "insert into a select * from b join c on duplicate key update d=e",
-		output: "syntax error at position 54 near 'key'",
+		output: "syntax error: unexpected KEY at position 54 near 'key'",
 	}, {
 		input:  "select * from a left join b",
-		output: "syntax error at position 28",
+		output: "syntax error: unexpected $end at position 28",
 	}, {
 		input:  "select * from a natural join b on c = d",
-		output: "syntax error at position 34 near 'on'",
+		output: "syntax error: unexpected ON at position 34 near 'on'",
 	}, {
 		input:  "select * from a natural join b using (c)",
-		output: "syntax error at position 37 near 'using'",
+		output: "syntax error: unexpected USING at position 37 near 'using'",
 	}, {
 		input:  "select next id from a",
 		output: "expecting value after next at position 15 near 'id'",
 	}, {
 		input:  "select next 1+1 values from a",
-		output: "syntax error at position 15",
+		output: "syntax error: unexpected '+', expecting VALUES at position 15",
 	}, {
 		input:  "insert into a values (select * from b)",
-		output: "syntax error at position 29 near 'select'",
+		output: "syntax error: unexpected SELECT at position 29 near 'select'",
 	}, {
 		input:  "select database",
-		output: "syntax error at position 16",
+		output: "syntax error: unexpected $end, expecting '(' at position 16",
 	}, {
 		input:  "select mod from t",
-		output: "syntax error at position 16 near 'from'",
+		output: "syntax error: unexpected FROM, expecting '(' at position 16 near 'from'",
 	}, {
 		input:  "select 1 from t where div 5",
-		output: "syntax error at position 26 near 'div'",
+		output: "syntax error: unexpected DIV at position 26 near 'div'",
 	}, {
 		input:  "select 1 from t where binary",
-		output: "syntax error at position 29",
+		output: "syntax error: unexpected $end at position 29",
 	}, {
 		input:  "select match(a1, a2) against ('foo' in boolean mode with query expansion) from t",
-		output: "syntax error at position 57 near 'with'",
+		output: "syntax error: unexpected WITH, expecting ')' at position 57 near 'with'",
 	}, {
 		input:  "select /* reserved keyword as unqualified column */ * from t where key = 'test'",
-		output: "syntax error at position 71 near 'key'",
+		output: "syntax error: unexpected KEY at position 71 near 'key'",
 	}, {
 		input:  "select /* vitess-reserved keyword as unqualified column */ * from t where escape = 'test'",
-		output: "syntax error at position 81 near 'escape'",
+		output: "syntax error: unexpected ESCAPE at position 81 near 'escape'",
 	}, {
 		input:  "(select /* parenthesized select */ * from t)",
-		output: "syntax error at position 45",
+		output: "syntax error: unexpected $end, expecting UNION at position 45",
 	}, {
 		input:  "select * from t where id = ((select a from t1 union select b from t2) order by a limit 1)",
-		output: "syntax error at position 76 near 'order'",
+		output: "syntax error: unexpected ORDER, expecting ',' or ')' at position 76 near 'order'",
 	}, {
 		input:  "select /* straight_join using */ 1 from t1 straight_join t2 using (a)",
-		output: "syntax error at position 66 near 'using'",
+		output: "syntax error: unexpected USING at position 66 near 'using'",
 	}, {
 		input:        "select 'aa",
-		output:       "syntax error at position 11 near 'aa'",
+		output:       "syntax error: unexpected LEX_ERROR at position 11 near 'aa'",
 		excludeMulti: true,
 	}, {
 		input:        "select 'aa\\",
-		output:       "syntax error at position 12 near 'aa'",
+		output:       "syntax error: unexpected LEX_ERROR at position 12 near 'aa'",
 		excludeMulti: true,
 	}, {
 		input:        "select /* aa",
-		output:       "syntax error at position 13 near '/* aa'",
+		output:       "syntax error: unexpected LEX_ERROR at position 13 near '/* aa'",
 		excludeMulti: true,
 	}}
 )

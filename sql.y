@@ -48,6 +48,10 @@ func forceEOF(yylex interface{}) {
   yylex.(*Tokenizer).ForceEOF = true
 }
 
+func init() {
+  yyErrorVerbose = true
+}
+
 %}
 
 %union {
