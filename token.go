@@ -217,6 +217,7 @@ var keywords = map[string]int{
 	"iterate":             UNUSED,
 	"join":                JOIN,
 	"json":                JSON,
+	"jsonb":               JSON,
 	"key":                 KEY,
 	"keys":                KEYS,
 	"key_block_size":      KEY_BLOCK_SIZE,
@@ -474,48 +475,27 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 	switch ch := tkn.lastChar; {
 	case isLetter(ch):
 		tkn.next()
-		if ch == 'X' || ch == 'x' {
+		switch ch {
+		case 'X', 'x':
 			if tkn.lastChar == '\'' {
 				tkn.next()
 				return tkn.scanHex()
 			}
-		}
-		if ch == 'B' || ch == 'b' {
+		case 'B', 'b':
 			if tkn.lastChar == '\'' {
 				tkn.next()
 				return tkn.scanBitLiteral()
 			}
-		}
-		isDbSystemVariable := false
-		doFallthrough := false
-		if ch == '@' {
+		case '@':
 			switch tkn.lastChar {
-			case '@':
+			case '>':
 				tkn.next()
-				tkn.skipBlank()
-				if tkn.lastChar == '\'' {
-					return JSON_PATH_RETURN_RESULT_OP, nil
-				}
-				isDbSystemVariable = true
-			case '>', '?': // json op
-				doFallthrough = true
+				return JSON_LEFT_CONTAINS_RIGHT_OP, nil
+			case '@':
+				return tkn.scanIdentifier(byte(ch), true)
 			}
 		}
-		if !doFallthrough {
-			return tkn.scanIdentifier(byte(ch), isDbSystemVariable)
-		}
-		fallthrough
-	case ch == '@':
-		switch tkn.lastChar {
-		case '>':
-			tkn.next()
-			return JSON_FIRST_VALUE_CONTAIN_SECOND_OP, nil
-		case '?':
-			tkn.next()
-			return JSON_PATH_RETURN_OP, nil
-		default:
-			return int(ch), nil
-		}
+		return tkn.scanIdentifier(byte(ch), false)
 	case isDigit(ch):
 		return tkn.scanNumber(false)
 	case ch == ':':
@@ -544,12 +524,18 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 		case '?':
 			tkn.skipBlank()
 			switch tkn.lastChar {
+			case '|':
+				tkn.next()
+				return JSON_ANY_KEYS_EXIST_OP, nil
+			case '&':
+				tkn.next()
+				return JSON_ALL_KEYS_EXIST_OP, nil
 			case '\'':
 				return JSON_TXT_STR_EXISTS_OP, nil
 			default:
 				tkn.posVarIndex++
 				buf := new(bytes2.Buffer)
-				fmt.Fprintf(buf, ":v%d", tkn.posVarIndex)
+				fmt.Fprintf(buf, "$%d", tkn.posVarIndex)
 				return VALUE_ARG, buf.Bytes()
 			}
 		case '.':
@@ -574,7 +560,6 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				return int(ch), nil
 			}
 		case '#':
-			tkn.skipBlank()
 			switch tkn.lastChar {
 			case '>':
 				tkn.next()
@@ -620,7 +605,7 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				}
 			case '@':
 				tkn.next()
-				return JSON_FIRST_VALUE_CONTAINED_IN_SECOND_OP, nil
+				return JSON_RIGHT_CONTAINS_LEFT_OP, nil
 			default:
 				return int(ch), nil
 			}

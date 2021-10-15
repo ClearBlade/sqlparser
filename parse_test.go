@@ -472,10 +472,10 @@ var (
 		input: "select /* value argument with dot */ :a.b from t",
 	}, {
 		input:  "select /* positional argument */ ? from t",
-		output: "select /* positional argument */ :v1 from t",
+		output: "select /* positional argument */ $1 from t",
 	}, {
 		input:  "select /* multiple positional arguments */ ?, ? from t",
-		output: "select /* multiple positional arguments */ :v1, :v2 from t",
+		output: "select /* multiple positional arguments */ $1, $2 from t",
 	}, {
 		input: "select /* list arg */ * from t where a in ::list",
 	}, {
@@ -828,7 +828,7 @@ var (
 		output: "alter table e",
 	}, {
 		input:  "alter table a reorganize partition b into (partition c values less than (?), partition d values less than (maxvalue))",
-		output: "alter table a reorganize partition b into (partition c values less than (:v1), partition d values less than (maxvalue))",
+		output: "alter table a reorganize partition b into (partition c values less than ($1), partition d values less than (maxvalue))",
 	}, {
 		input:  "alter table a partition by range (id) (partition p0 values less than (10), partition p1 values less than (maxvalue))",
 		output: "alter table a",
@@ -1311,6 +1311,8 @@ var (
 	}, {
 		input:  "drop database if exists test_db",
 		output: "drop database test_db",
+	}, {
+		input: "select COUNT(*) from myTable where CAST(coalesce(nullif(myColumn, ''), '{}') AS jsonb) ?| (select array_agg(id) from myOtherTable where group_id = 'some_group')",
 	}}
 )
 
@@ -1613,7 +1615,7 @@ func TestConvert(t *testing.T) {
 		}
 		out := String(tree)
 		if out != tcase.output {
-			t.Errorf("out: %s, want %s", out, tcase.output)
+			t.Errorf("\nout: %s, \nwant %s", out, tcase.output)
 		}
 	}
 
