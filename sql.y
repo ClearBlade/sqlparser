@@ -1988,15 +1988,17 @@ condition:
   {
     $$ = &ComparisonExpr{Left: $1, Operator: NotRegexpStr, Right: $4}
   }
-| value_expression JSON_TXT_STR_EXISTS_OP value_expression
+| value_expression JSON_TXT_STR_EXISTS_OP value
+// TODO: $3 should be value_expression but will mess things up until tokenizing is fixed
+// and maybe json operator precedence as well
   {
     $$ = &ComparisonExpr{Left: $1, Operator: JSONTextStrExistsOp, Right: $3}
   }
-| value_expression JSON_ANY_KEYS_EXIST_OP value_expression
+| value_expression JSON_ANY_KEYS_EXIST_OP col_tuple
   {
     $$ = &ComparisonExpr{Left: $1, Operator: JSONAnyKeysExistOp, Right: $3}
   }
-| value_expression JSON_ALL_KEYS_EXIST_OP value_expression
+| value_expression JSON_ALL_KEYS_EXIST_OP col_tuple
   {
     $$ = &ComparisonExpr{Left: $1, Operator: JSONAllKeysExistOp, Right: $3}
   }
@@ -2185,19 +2187,19 @@ value_expression:
   {
     $$ = &BinaryExpr{Left: $1, Operator: ShiftRightStr, Right: $3}
   }
-| value_expression JSON_EXTRACT_OP value
+| value_expression JSON_EXTRACT_OP value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONExtractOp, Right: $3}
   }
-| value_expression JSON_UNQUOTE_EXTRACT_OP value
+| value_expression JSON_UNQUOTE_EXTRACT_OP value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONUnquoteExtractOp, Right: $3}
   }
-| value_expression JSON_SUBOBJECT_OP value
+| value_expression JSON_SUBOBJECT_OP value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONSubObjectOp, Right: $3}
   }
-| value_expression JSON_UNQUOTE_SUBOBJECT_OP value
+| value_expression JSON_UNQUOTE_SUBOBJECT_OP value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONUnquoteSubObjectOp, Right: $3}
   }
