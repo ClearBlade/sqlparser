@@ -2476,9 +2476,10 @@ type ColTuple interface {
 	Expr
 }
 
-func (ValTuple) iColTuple()  {}
-func (*Subquery) iColTuple() {}
-func (ListArg) iColTuple()   {}
+func (ValTuple) iColTuple()    {}
+func (*Subquery) iColTuple()   {}
+func (ListArg) iColTuple()     {}
+func (ConvertExpr) iColTuple() {}
 
 // ValTuple represents a tuple of actual values.
 type ValTuple Exprs

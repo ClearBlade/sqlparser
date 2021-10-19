@@ -54,10 +54,10 @@ func (pq *ParsedQuery) GenerateQuery(bindVariables map[string]*querypb.BindVaria
 	for _, loc := range pq.bindLocations {
 		buf.WriteString(pq.Query[current:loc.offset])
 		name := pq.Query[loc.offset : loc.offset+loc.length]
-		if encodable, ok := extras[name[1:]]; ok {
+		if encodable, ok := extras[name]; ok {
 			encodable.EncodeSQL(buf)
 		} else {
-			supplied, _, err := FetchBindVar(name, bindVariables)
+			supplied, err := FetchBindVar(name, bindVariables)
 			if err != nil {
 				return nil, err
 			}
@@ -90,30 +90,16 @@ func EncodeValue(buf *bytes.Buffer, value *querypb.BindVariable) {
 }
 
 // FetchBindVar resolves the bind variable by fetching it from bindVariables.
-func FetchBindVar(name string, bindVariables map[string]*querypb.BindVariable) (val *querypb.BindVariable, isList bool, err error) {
-	name = name[1:]
+func FetchBindVar(name string, bindVariables map[string]*querypb.BindVariable) (val *querypb.BindVariable, err error) {
 	if name[0] == ':' {
 		name = name[1:]
-		isList = true
 	}
 	supplied, ok := bindVariables[name]
 	if !ok {
-		return nil, false, fmt.Errorf("missing bind var %s", name)
+		return nil, fmt.Errorf("missing bind var %s", name)
 	}
-
-	if isList {
-		if supplied.Type != querypb.Type_TUPLE {
-			return nil, false, fmt.Errorf("unexpected list arg type (%v) for key %s", supplied.Type, name)
-		}
-		if len(supplied.Values) == 0 {
-			return nil, false, fmt.Errorf("empty list supplied for %s", name)
-		}
-		return supplied, true, nil
+	if supplied.Type == querypb.Type_TUPLE && len(supplied.Values) == 0 {
+		return nil, fmt.Errorf("empty list supplied for %s", name)
 	}
-
-	if supplied.Type == querypb.Type_TUPLE {
-		return nil, false, fmt.Errorf("unexpected arg type (TUPLE) for non-list key %s", name)
-	}
-
-	return supplied, false, nil
+	return supplied, nil
 }

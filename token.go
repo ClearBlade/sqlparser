@@ -498,8 +498,6 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 		return tkn.scanIdentifier(byte(ch), false)
 	case isDigit(ch):
 		return tkn.scanNumber(false)
-	case ch == ':':
-		return tkn.scanBindVar()
 	case ch == ';' && tkn.multi:
 		return 0, nil
 	default:
@@ -507,8 +505,14 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 		switch ch {
 		case eofChar:
 			return 0, nil
-		case '=', ',', ';', '(', ')', '+', '*', '%', '^', '~':
+		case '=', ',', ';', '(', ')', '+', '*', '%', '^', '~', '[', ']':
 			return int(ch), nil
+		case ':':
+			if tkn.lastChar == ':' {
+				tkn.next()
+				return TYPECAST, nil
+			}
+			return LEX_ERROR, []byte{byte(ch)}
 		case '&':
 			if tkn.lastChar == '&' {
 				tkn.next()
@@ -531,6 +535,11 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				tkn.next()
 				return JSON_ALL_KEYS_EXIST_OP, nil
 			case '\'':
+				// TODO: this is hacky and prevents taking values from subqueries
+				// consider: select * from tableA where myColumn ? (select otherColumn from tableB limit 1)
+				// that query will fail because we assume '?' is a parameter placeholder rather than an operator
+				// we need to return a generic token here handle this in the grammar
+				// but I don't know how that will effect parameter parsing
 				return JSON_TXT_STR_EXISTS_OP, nil
 			default:
 				tkn.posVarIndex++
@@ -538,6 +547,17 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				fmt.Fprintf(buf, "$%d", tkn.posVarIndex)
 				return VALUE_ARG, buf.Bytes()
 			}
+		case '$':
+			if !isDigit(tkn.lastChar) {
+				return LEX_ERROR, []byte{byte(ch)}
+			}
+			buf := new(bytes2.Buffer)
+			buf.WriteByte('$')
+			for isDigit(tkn.lastChar) {
+				buf.WriteByte(byte(tkn.lastChar))
+				tkn.next()
+			}
+			return VALUE_ARG, buf.Bytes()
 		case '.':
 			if isDigit(tkn.lastChar) {
 				return tkn.scanNumber(true)
@@ -724,26 +744,6 @@ func (tkn *Tokenizer) scanLiteralIdentifier() (int, []byte) {
 		return LEX_ERROR, buffer.Bytes()
 	}
 	return ID, buffer.Bytes()
-}
-
-func (tkn *Tokenizer) scanBindVar() (int, []byte) {
-	buffer := &bytes2.Buffer{}
-	buffer.WriteByte(byte(tkn.lastChar))
-	token := VALUE_ARG
-	tkn.next()
-	if tkn.lastChar == ':' {
-		token = LIST_ARG
-		buffer.WriteByte(byte(tkn.lastChar))
-		tkn.next()
-	}
-	if !isLetter(tkn.lastChar) {
-		return LEX_ERROR, buffer.Bytes()
-	}
-	for isLetter(tkn.lastChar) || isDigit(tkn.lastChar) || tkn.lastChar == '.' {
-		buffer.WriteByte(byte(tkn.lastChar))
-		tkn.next()
-	}
-	return token, buffer.Bytes()
 }
 
 func (tkn *Tokenizer) scanMantissa(base int, buffer *bytes2.Buffer) {

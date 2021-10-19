@@ -126,7 +126,7 @@ func init() {
 %left <bytes> JOIN STRAIGHT_JOIN LEFT RIGHT INNER OUTER CROSS NATURAL USE FORCE
 %left <bytes> ON USING
 %token <empty> '(' ',' ')'
-%token <bytes> ID HEX STRING INTEGRAL FLOAT HEXNUM VALUE_ARG LIST_ARG COMMENT COMMENT_KEYWORD BIT_LITERAL
+%token <bytes> ID HEX STRING INTEGRAL FLOAT HEXNUM VALUE_ARG COMMENT COMMENT_KEYWORD BIT_LITERAL
 %token <bytes> NULL TRUE FALSE
 
 // Precedence dictated by mysql. But the vitess grammar is simplified.
@@ -148,6 +148,7 @@ func init() {
 %left <bytes> COLLATE
 %right <bytes> BINARY UNDERSCORE_BINARY
 %right <bytes> INTERVAL
+%left <bytes> TYPECAST
 %nonassoc <bytes> '.'
 
 // There is no need to define precedence for the JSON
@@ -2097,8 +2098,23 @@ col_tuple:
   {
     $$ = $1
   }
-| LIST_ARG
+| STRING TYPECAST convert_type
   {
+    $$ = &ConvertExpr{Expr: NewStrVal($1), Type: $3}
+  }
+| STRING
+  {
+    // this is an array literal ('{a,b,c}', etc)
+    // TODO this is weird and ugly but I need those quotes to be passed through
+    tmp := make([]byte, len($1)+2)
+    tmp[0] = '\''
+    tmp[len($1)+1] = '\''
+    copy(tmp[1:], $1)
+    $$ = ListArg(tmp)
+  }
+| VALUE_ARG
+  {
+    // this is a positional parameter ($1, etc)
     $$ = ListArg($1)
   }
 
@@ -2202,6 +2218,10 @@ value_expression:
 | value_expression JSON_UNQUOTE_SUBOBJECT_OP value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: JSONUnquoteSubObjectOp, Right: $3}
+  }
+| value_expression TYPECAST convert_type
+  {
+    $$ = &ConvertExpr{Expr: $1, Type: $3}
   }
 | value_expression COLLATE charset
   {
@@ -2443,7 +2463,11 @@ charset:
 }
 
 convert_type:
-  BINARY length_opt
+  TEXT
+  {
+    $$ = &ConvertType{Type: string($1)}
+  }
+| BINARY length_opt
   {
     $$ = &ConvertType{Type: string($1), Length: $2}
   }
@@ -2496,6 +2520,10 @@ convert_type:
 | UNSIGNED INTEGER
   {
     $$ = &ConvertType{Type: string($1)}
+  }
+| convert_type '[' ']'
+  {
+    $$ = &ConvertType{Type: $1.Type+"[]"}
   }
 
 expression_opt:

@@ -164,7 +164,7 @@ var (
 	}, {
 		input: "select next 10 values from t",
 	}, {
-		input: "select next :a values from t",
+		input: "select next $1 values from t",
 	}, {
 		input: "select /* `By`.* */ `By`.* from t",
 	}, {
@@ -465,11 +465,10 @@ var (
 	}, {
 		input: "select /* unescaped backslash */ '\\n' from t",
 	}, {
-		input: "select /* value argument */ :a from t",
+		input:  "select /* value argument */ ? from t",
+		output: "select /* value argument */ $1 from t",
 	}, {
-		input: "select /* value argument with digit */ :a1 from t",
-	}, {
-		input: "select /* value argument with dot */ :a.b from t",
+		input: "select /* value argument with digit */ $1 from t",
 	}, {
 		input:  "select /* positional argument */ ? from t",
 		output: "select /* positional argument */ $1 from t",
@@ -477,9 +476,9 @@ var (
 		input:  "select /* multiple positional arguments */ ?, ? from t",
 		output: "select /* multiple positional arguments */ $1, $2 from t",
 	}, {
-		input: "select /* list arg */ * from t where a in ::list",
+		input: "select /* list arg */ * from t where a in $1",
 	}, {
-		input: "select /* list arg not in */ * from t where a not in ::list",
+		input: "select /* list arg not in */ * from t where a not in $1",
 	}, {
 		input: "select /* null */ null from t",
 	}, {
@@ -1313,6 +1312,14 @@ var (
 		output: "drop database test_db",
 	}, {
 		input: "select COUNT(*) from myTable where CAST(coalesce(nullif(myColumn, ''), '{}') AS jsonb) ?| (select array_agg(id) from myOtherTable where group_id = 'some_group')",
+	}, {
+		input:  "SELECT a::jsonb FROM tab",
+		output: "select CAST(a AS jsonb) from tab",
+	}, {
+		input: "select a from b where a ?| '{a,b,c}'",
+	}, {
+		input: "select a from b where a ?| '{a,b,c}'::text[]",
+		output: "select a from b where a ?| CAST('{a,b,c}' AS text[])",
 	}}
 )
 
@@ -1989,10 +1996,10 @@ var (
 		output: "syntax error: unexpected LEX_ERROR at position 24 near ':'",
 	}, {
 		input:  "select * from t where ::1 = 2",
-		output: "syntax error: unexpected LEX_ERROR at position 25 near '::'",
+		output: "syntax error: unexpected TYPECAST at position 25",
 	}, {
 		input:  "select * from t where ::. = 2",
-		output: "syntax error: unexpected LEX_ERROR at position 25 near '::'",
+		output: "syntax error: unexpected TYPECAST at position 25",
 	}, {
 		input:  "update a set c = values(1)",
 		output: "syntax error: unexpected INTEGRAL at position 26 near '1'",

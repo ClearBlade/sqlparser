@@ -26,15 +26,15 @@ import (
 )
 
 func TestNewParsedQuery(t *testing.T) {
-	stmt, err := Parse("select * from a where id =:id")
+	stmt, err := Parse("select * from a where id = ?")
 	if err != nil {
 		t.Error(err)
 		return
 	}
 	pq := NewParsedQuery(stmt)
 	want := &ParsedQuery{
-		Query:         "select * from a where id = :id",
-		bindLocations: []bindLocation{{offset: 27, length: 3}},
+		Query:         "select * from a where id = $1",
+		bindLocations: []bindLocation{{offset: 27, length: 2}},
 	}
 	if !reflect.DeepEqual(pq, want) {
 		t.Errorf("GenerateParsedQuery: %+v, want %+v", pq, want)
@@ -58,52 +58,38 @@ func TestGenerateQuery(t *testing.T) {
 			output: "select * from a where id = 2",
 		}, {
 			desc:  "missing bind var",
-			query: "select * from a where id1 = :id1 and id2 = :id2",
+			query: "select * from a where id1 = $1 and id2 = $2",
 			bindVars: map[string]*querypb.BindVariable{
-				"id1": sqltypes.Int64BindVariable(1),
+				"$1": sqltypes.Int64BindVariable(1),
 			},
-			output: "missing bind var id2",
+			output: "missing bind var $2",
 		}, {
 			desc:  "simple bindvar substitution",
-			query: "select * from a where id1 = :id1 and id2 = :id2",
+			query: "select * from a where id1 = $1 and id2 = $2",
 			bindVars: map[string]*querypb.BindVariable{
-				"id1": sqltypes.Int64BindVariable(1),
-				"id2": sqltypes.NullBindVariable,
+				"$1": sqltypes.Int64BindVariable(1),
+				"$2": sqltypes.NullBindVariable,
 			},
 			output: "select * from a where id1 = 1 and id2 = null",
 		}, {
 			desc:  "tuple *querypb.BindVariable",
-			query: "select * from a where id in ::vals",
+			query: "select * from a where id in $1",
 			bindVars: map[string]*querypb.BindVariable{
-				"vals": sqltypes.TestBindVariable([]interface{}{1, "aa"}),
+				"$1": sqltypes.TestBindVariable([]interface{}{1, "aa"}),
 			},
 			output: "select * from a where id in (1, 'aa')",
 		}, {
 			desc:  "list bind vars 0 arguments",
-			query: "select * from a where id in ::vals",
+			query: "select * from a where id in $1",
 			bindVars: map[string]*querypb.BindVariable{
-				"vals": sqltypes.TestBindVariable([]interface{}{}),
+				"$1": sqltypes.TestBindVariable([]interface{}{}),
 			},
-			output: "empty list supplied for vals",
-		}, {
-			desc:  "non-list bind var supplied",
-			query: "select * from a where id in ::vals",
-			bindVars: map[string]*querypb.BindVariable{
-				"vals": sqltypes.Int64BindVariable(1),
-			},
-			output: "unexpected list arg type (INT64) for key vals",
-		}, {
-			desc:  "list bind var for non-list",
-			query: "select * from a where id = :vals",
-			bindVars: map[string]*querypb.BindVariable{
-				"vals": sqltypes.TestBindVariable([]interface{}{1}),
-			},
-			output: "unexpected arg type (TUPLE) for non-list key vals",
+			output: "empty list supplied for $1",
 		}, {
 			desc:  "single column tuple equality",
-			query: "select * from a where b = :equality",
+			query: "select * from a where b = $1",
 			extras: map[string]Encodable{
-				"equality": &TupleEqualityList{
+				"$1": &TupleEqualityList{
 					Columns: []ColIdent{NewColIdent("pk")},
 					Rows: [][]sqltypes.Value{
 						{sqltypes.NewInt64(1)},
@@ -114,9 +100,9 @@ func TestGenerateQuery(t *testing.T) {
 			output: "select * from a where b = pk in (1, 'aa')",
 		}, {
 			desc:  "multi column tuple equality",
-			query: "select * from a where b = :equality",
+			query: "select * from a where b = $1",
 			extras: map[string]Encodable{
-				"equality": &TupleEqualityList{
+				"$1": &TupleEqualityList{
 					Columns: []ColIdent{NewColIdent("pk1"), NewColIdent("pk2")},
 					Rows: [][]sqltypes.Value{
 						{

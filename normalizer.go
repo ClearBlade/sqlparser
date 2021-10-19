@@ -31,25 +31,23 @@ import (
 // Within Select constructs, bind vars are deduped. This allows
 // us to identify vindex equality. Otherwise, every value is
 // treated as distinct.
-func Normalize(stmt Statement, bindVars map[string]*querypb.BindVariable, prefix string) {
-	nz := newNormalizer(stmt, bindVars, prefix)
+func Normalize(stmt Statement, bindVars map[string]*querypb.BindVariable) {
+	nz := newNormalizer(stmt, bindVars)
 	_ = Walk(nil, nz.WalkStatement, stmt)
 }
 
 type normalizer struct {
 	stmt     Statement
 	bindVars map[string]*querypb.BindVariable
-	prefix   string
 	reserved map[string]struct{}
 	counter  int
 	vals     map[string]string
 }
 
-func newNormalizer(stmt Statement, bindVars map[string]*querypb.BindVariable, prefix string) *normalizer {
+func newNormalizer(stmt Statement, bindVars map[string]*querypb.BindVariable) *normalizer {
 	return &normalizer{
 		stmt:     stmt,
 		bindVars: bindVars,
-		prefix:   prefix,
 		reserved: GetBindvars(stmt),
 		counter:  1,
 		vals:     make(map[string]string),
@@ -120,7 +118,7 @@ func (nz *normalizer) convertSQLValDedup(node *SQLVal) {
 
 	// Modify the AST node to a bindvar.
 	node.Type = ValArg
-	node.Val = append([]byte(":"), bvname...)
+	node.Val = []byte(bvname)
 }
 
 // convertSQLVal converts an SQLVal without the dedup.
@@ -134,7 +132,7 @@ func (nz *normalizer) convertSQLVal(node *SQLVal) {
 	nz.bindVars[bvname] = bval
 
 	node.Type = ValArg
-	node.Val = append([]byte(":"), bvname...)
+	node.Val = []byte(bvname)
 }
 
 // convertComparison attempts to convert IN clauses to
@@ -168,7 +166,7 @@ func (nz *normalizer) convertComparison(node *ComparisonExpr) {
 	bvname := nz.newName()
 	nz.bindVars[bvname] = bvals
 	// Modify RHS to be a list bindvar.
-	node.Right = ListArg(append([]byte("::"), bvname...))
+	node.Right = ListArg(bvname)
 }
 
 func (nz *normalizer) sqlToBindvar(node SQLNode) *querypb.BindVariable {
@@ -195,7 +193,7 @@ func (nz *normalizer) sqlToBindvar(node SQLNode) *querypb.BindVariable {
 
 func (nz *normalizer) newName() string {
 	for {
-		newName := fmt.Sprintf("%s%d", nz.prefix, nz.counter)
+		newName := fmt.Sprintf("$%d", nz.counter)
 		if _, ok := nz.reserved[newName]; !ok {
 			nz.reserved[newName] = struct{}{}
 			return newName
@@ -213,10 +211,10 @@ func GetBindvars(stmt Statement) map[string]struct{} {
 		switch node := node.(type) {
 		case *SQLVal:
 			if node.Type == ValArg {
-				bindvars[string(node.Val[1:])] = struct{}{}
+				bindvars[string(node.Val)] = struct{}{}
 			}
 		case ListArg:
-			bindvars[string(node[2:])] = struct{}{}
+			bindvars[string(node)] = struct{}{}
 		}
 		return true, nil
 	}, stmt)
