@@ -2497,6 +2497,10 @@ convert_type:
   {
     $$ = &ConvertType{Type: string($1)}
   }
+| BOOLEAN
+  {
+    $$ = &ConvertType{Type: "boolean"}
+  }
 | NCHAR length_opt
   {
     $$ = &ConvertType{Type: string($1), Length: $2}

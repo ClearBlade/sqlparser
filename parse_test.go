@@ -1316,9 +1316,12 @@ var (
 		input:  "SELECT a::jsonb FROM tab",
 		output: "select CAST(a AS jsonb) from tab",
 	}, {
+		input:  "SELECT a::boolean FROM tab",
+		output: "select CAST(a AS boolean) from tab",
+	}, {
 		input: "select a from b where a ?| '{a,b,c}'",
 	}, {
-		input: "select a from b where a ?| '{a,b,c}'::text[]",
+		input:  "select a from b where a ?| '{a,b,c}'::text[]",
 		output: "select a from b where a ?| CAST('{a,b,c}' AS text[])",
 	}}
 )
