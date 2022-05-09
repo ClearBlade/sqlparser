@@ -4502,7 +4502,7 @@ yydefault:
 		yyDollar = yyS[yypt-0 : yypt+1]
 //line sql.y:1681
 		{
-			yyVAL.tableExprs = TableExprs{&AliasedTableExpr{Expr: TableName{Name: NewTableIdent("dual")}}}
+			yyVAL.tableExprs = nil
 		}
 	case 305:
 		yyDollar = yyS[yypt-2 : yypt+1]
