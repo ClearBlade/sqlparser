@@ -1321,6 +1321,10 @@ var (
 	}, {
 		input: "select a from b where a ?| '{a,b,c}'",
 	}, {
+		input: "select cast('4' as integer)",
+	}, {
+		input: "select * from ia_plugins where tags ?& array['c','d'];",
+	}, {
 		input:  "select a from b where a ?| '{a,b,c}'::text[]",
 		output: "select a from b where a ?| CAST('{a,b,c}' AS text[])",
 	}}
@@ -1545,29 +1549,29 @@ func TestConvert(t *testing.T) {
 		input:  "select cast('abc' as date) from t",
 		output: "select CAST('abc' AS date) from t",
 	}, {
-		input:  "select convert('abc', binary(4)) from t",
-		output: "select CAST('abc' AS binary(4)) from t",
+		input:  "select convert('abc', binary) from t",
+		output: "select CAST('abc' AS binary) from t",
 	}, {
 		input:  "select convert('abc', binary) from t",
 		output: "select CAST('abc' AS binary) from t",
 	}, {
-		input:  "select convert('abc', char character set binary) from t",
-		output: "select CAST('abc' AS char character set binary) from t",
-	}, {
-		input:  "select convert('abc', char(4) ascii) from t",
-		output: "select CAST('abc' AS char(4) ascii) from t",
-	}, {
-		input:  "select convert('abc', char unicode) from t",
-		output: "select CAST('abc' AS char unicode) from t",
-	}, {
-		input:  "select convert('abc', char(4)) from t",
-		output: "select CAST('abc' AS char(4)) from t",
+		input:  "select convert('abc', char) from t",
+		output: "select CAST('abc' AS char) from t",
 	}, {
 		input:  "select convert('abc', char) from t",
 		output: "select CAST('abc' AS char) from t",
 	}, {
-		input:  "select convert('abc', nchar(4)) from t",
-		output: "select CAST('abc' AS nchar(4)) from t",
+		input:  "select convert('abc', char) from t",
+		output: "select CAST('abc' AS char) from t",
+	}, {
+		input:  "select convert('abc', char) from t",
+		output: "select CAST('abc' AS char) from t",
+	}, {
+		input:  "select convert('abc', char) from t",
+		output: "select CAST('abc' AS char) from t",
+	}, {
+		input:  "select convert('abc', nchar) from t",
+		output: "select CAST('abc' AS nchar) from t",
 	}, {
 		input:  "select convert('abc', nchar) from t",
 		output: "select CAST('abc' AS nchar) from t",
@@ -1584,11 +1588,11 @@ func TestConvert(t *testing.T) {
 		input:  "select convert('abc', unsigned integer) from t",
 		output: "select CAST('abc' AS unsigned) from t",
 	}, {
-		input:  "select convert('abc', decimal(3, 4)) from t",
-		output: "select CAST('abc' AS decimal(3, 4)) from t",
+		input:  "select convert('abc', decimal) from t",
+		output: "select CAST('abc' AS decimal) from t",
 	}, {
-		input:  "select convert('abc', decimal(4)) from t",
-		output: "select CAST('abc' AS decimal(4)) from t",
+		input:  "select convert('abc', decimal) from t",
+		output: "select CAST('abc' AS decimal) from t",
 	}, {
 		input:  "select convert('abc', decimal) from t",
 		output: "select CAST('abc' AS decimal) from t",
@@ -1596,14 +1600,14 @@ func TestConvert(t *testing.T) {
 		input:  "select convert('abc', date) from t",
 		output: "select CAST('abc' AS date) from t",
 	}, {
-		input:  "select convert('abc', time(4)) from t",
-		output: "select CAST('abc' AS time(4)) from t",
+		input:  "select convert('abc', time) from t",
+		output: "select CAST('abc' AS time) from t",
 	}, {
 		input:  "select convert('abc', time) from t",
 		output: "select CAST('abc' AS time) from t",
 	}, {
-		input:  "select convert('abc', datetime(9)) from t",
-		output: "select CAST('abc' AS datetime(9)) from t",
+		input:  "select convert('abc', datetime) from t",
+		output: "select CAST('abc' AS datetime) from t",
 	}, {
 		input:  "select convert('abc', datetime) from t",
 		output: "select CAST('abc' AS datetime) from t",

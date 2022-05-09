@@ -2529,6 +2529,10 @@ convert_type:
   {
     $$ = &ConvertType{Type: $1.Type+"[]"}
   }
+| column_type
+  {
+    $$ = &ConvertType{Type: $1.Type}
+  }
 
 expression_opt:
   {
