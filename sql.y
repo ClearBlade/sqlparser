@@ -180,6 +180,7 @@ func init() {
 %token <bytes> TEXT TINYTEXT MEDIUMTEXT LONGTEXT
 %token <bytes> BLOB TINYBLOB MEDIUMBLOB LONGBLOB JSON ENUM
 %token <bytes> GEOMETRY POINT LINESTRING POLYGON GEOMETRYCOLLECTION MULTIPOINT MULTILINESTRING MULTIPOLYGON
+%token <bytes> ARRAY
 
 // Type Modifiers
 %token <bytes> NULLX AUTO_INCREMENT APPROXNUM SIGNED UNSIGNED ZEROFILL
@@ -2102,6 +2103,10 @@ col_tuple:
   {
     $$ = &ConvertExpr{Expr: NewStrVal($1), Type: $3}
   }
+| ARRAY '[' expression_list ']'
+  {
+    $$ = Array($3)
+  }
 | STRING
   {
     // this is an array literal ('{a,b,c}', etc)
@@ -3002,6 +3007,7 @@ reserved_table_id:
 reserved_keyword:
   ADD
 | AND
+| ARRAY
 | AS
 | ASC
 | AUTO_INCREMENT

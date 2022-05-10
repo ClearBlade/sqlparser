@@ -1962,6 +1962,7 @@ func (*NullVal) iExpr()          {}
 func (BoolVal) iExpr()           {}
 func (*ColName) iExpr()          {}
 func (ValTuple) iExpr()          {}
+func (Array) iExpr()             {}
 func (*Subquery) iExpr()         {}
 func (ListArg) iExpr()           {}
 func (*BinaryExpr) iExpr()       {}
@@ -2485,6 +2486,7 @@ func (ValTuple) iColTuple()    {}
 func (*Subquery) iColTuple()   {}
 func (ListArg) iColTuple()     {}
 func (ConvertExpr) iColTuple() {}
+func (Array) iColTuple()       {}
 
 // ValTuple represents a tuple of actual values.
 type ValTuple Exprs
@@ -2499,6 +2501,25 @@ func (node ValTuple) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 func (node ValTuple) replace(from, to Expr) bool {
+	for i := range node {
+		if replaceExprs(from, to, &node[i]) {
+			return true
+		}
+	}
+	return false
+}
+
+type Array Exprs
+
+func (node Array) Format(ctx Rewriter, buf *TrackedBuffer) {
+	buf.Myprintf(ctx, "array[%v]", Exprs(node))
+}
+
+func (node Array) walkSubtree(ctx interface{}, visit Visit) error {
+	return Walk(ctx, visit, Exprs(node))
+}
+
+func (node Array) replace(from, to Expr) bool {
 	for i := range node {
 		if replaceExprs(from, to, &node[i]) {
 			return true

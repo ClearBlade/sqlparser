@@ -1323,7 +1323,9 @@ var (
 	}, {
 		input: "select CAST('4' AS integer)",
 	}, {
-		input: "select * from ia_plugins where tags ?& array['c','d'];",
+		input: "select * from ia_plugins where tags ?& array['c', 'd']",
+	}, {
+		input: "select * from ia_plugins where tags ?& array[1, 2, 3]",
 	}, {
 		input:  "select a from b where a ?| '{a,b,c}'::text[]",
 		output: "select a from b where a ?| CAST('{a,b,c}' AS text[])",
