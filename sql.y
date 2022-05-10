@@ -180,6 +180,7 @@ func init() {
 %token <bytes> TEXT TINYTEXT MEDIUMTEXT LONGTEXT
 %token <bytes> BLOB TINYBLOB MEDIUMBLOB LONGBLOB JSON ENUM
 %token <bytes> GEOMETRY POINT LINESTRING POLYGON GEOMETRYCOLLECTION MULTIPOINT MULTILINESTRING MULTIPOLYGON
+%token <bytes> ARRAY
 
 // Type Modifiers
 %token <bytes> NULLX AUTO_INCREMENT APPROXNUM SIGNED UNSIGNED ZEROFILL
@@ -1679,7 +1680,7 @@ col_alias:
 
 from_opt:
   {
-    $$ = TableExprs{&AliasedTableExpr{Expr:TableName{Name: NewTableIdent("dual")}}}
+    $$ = nil
   }
 | FROM table_references
   {
@@ -2102,6 +2103,10 @@ col_tuple:
   {
     $$ = &ConvertExpr{Expr: NewStrVal($1), Type: $3}
   }
+| ARRAY '[' expression_list ']'
+  {
+    $$ = Array($3)
+  }
 | STRING
   {
     // this is an array literal ('{a,b,c}', etc)
@@ -2463,41 +2468,7 @@ charset:
 }
 
 convert_type:
-  TEXT
-  {
-    $$ = &ConvertType{Type: string($1)}
-  }
-| BINARY length_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2}
-  }
-| CHAR length_opt charset_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2, Charset: $3, Operator: CharacterSetStr}
-  }
-| CHAR length_opt ID
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2, Charset: string($3)}
-  }
-| DATE
-  {
-    $$ = &ConvertType{Type: string($1)}
-  }
-| DATETIME length_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2}
-  }
-| DECIMAL decimal_length_opt
-  {
-    $$ = &ConvertType{Type: string($1)}
-    $$.Length = $2.Length
-    $$.Scale = $2.Scale
-  }
-| JSON
-  {
-    $$ = &ConvertType{Type: string($1)}
-  }
-| BOOLEAN
+  BOOLEAN
   {
     $$ = &ConvertType{Type: "boolean"}
   }
@@ -2513,10 +2484,6 @@ convert_type:
   {
     $$ = &ConvertType{Type: string($1)}
   }
-| TIME length_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2}
-  }
 | UNSIGNED
   {
     $$ = &ConvertType{Type: string($1)}
@@ -2528,6 +2495,10 @@ convert_type:
 | convert_type '[' ']'
   {
     $$ = &ConvertType{Type: $1.Type+"[]"}
+  }
+| column_type
+  {
+    $$ = &ConvertType{Type: $1.Type}
   }
 
 expression_opt:
@@ -2998,6 +2969,7 @@ reserved_table_id:
 reserved_keyword:
   ADD
 | AND
+| ARRAY
 | AS
 | ASC
 | AUTO_INCREMENT

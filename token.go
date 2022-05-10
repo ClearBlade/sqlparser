@@ -90,6 +90,7 @@ var keywords = map[string]int{
 	"alter":               ALTER,
 	"analyze":             ANALYZE,
 	"and":                 AND,
+	"array":               ARRAY,
 	"as":                  AS,
 	"asc":                 ASC,
 	"asensitive":          UNUSED,
