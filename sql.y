@@ -2468,41 +2468,7 @@ charset:
 }
 
 convert_type:
-  TEXT
-  {
-    $$ = &ConvertType{Type: string($1)}
-  }
-| BINARY length_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2}
-  }
-| CHAR length_opt charset_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2, Charset: $3, Operator: CharacterSetStr}
-  }
-| CHAR length_opt ID
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2, Charset: string($3)}
-  }
-| DATE
-  {
-    $$ = &ConvertType{Type: string($1)}
-  }
-| DATETIME length_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2}
-  }
-| DECIMAL decimal_length_opt
-  {
-    $$ = &ConvertType{Type: string($1)}
-    $$.Length = $2.Length
-    $$.Scale = $2.Scale
-  }
-| JSON
-  {
-    $$ = &ConvertType{Type: string($1)}
-  }
-| BOOLEAN
+  BOOLEAN
   {
     $$ = &ConvertType{Type: "boolean"}
   }
@@ -2517,10 +2483,6 @@ convert_type:
 | SIGNED INTEGER
   {
     $$ = &ConvertType{Type: string($1)}
-  }
-| TIME length_opt
-  {
-    $$ = &ConvertType{Type: string($1), Length: $2}
   }
 | UNSIGNED
   {
