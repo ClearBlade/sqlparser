@@ -69,19 +69,19 @@ var (
 	}, {
 		input: "select /* double */ /* comment */ 1 from t",
 	}, {
-		input: "select /* back-quote keyword */ `By` from t",
+		input: "select /* double-quoted keyword */ \"By\" from t",
 	}, {
-		input: "select /* back-quote num */ `2a` from t",
+		input: "select /* double-quoted num */ \"2a\" from t",
 	}, {
-		input: "select /* back-quote . */ `a.b` from t",
+		input: "select /* double-quoted . */ \"a.b\" from t",
 	}, {
-		input: "select /* back-quote back-quote */ `a``b` from t",
+		input: "select /* double-quoted double-quote */ \"a\"\"b\" from t",
 	}, {
-		input:  "select /* back-quote unnecessary */ 1 from `t`",
-		output: "select /* back-quote unnecessary */ 1 from t",
+		input:  "select /* double-quoted unnecessary */ 1 from \"t\"",
+		output: "select /* double-quoted unnecessary */ 1 from t",
 	}, {
-		input:  "select /* back-quote idnum */ 1 from `a1`",
-		output: "select /* back-quote idnum */ 1 from a1",
+		input:  "select /* double-quoted idnum */ 1 from \"a1\"",
+		output: "select /* double-quoted idnum */ 1 from a1",
 	}, {
 		input: "select /* @ */ @@a from b",
 	}, {
@@ -146,7 +146,7 @@ var (
 	}, {
 		input: "select /* column alias with as */ a as b from t",
 	}, {
-		input: "select /* keyword column alias */ a as `By` from t",
+		input: "select /* keyword column alias */ a as \"By\" from t",
 	}, {
 		input:  "select /* column alias as string */ a as \"b\" from t",
 		output: "select /* column alias as string */ a as b from t",
@@ -166,7 +166,7 @@ var (
 	}, {
 		input: "select next $1 values from t",
 	}, {
-		input: "select /* `By`.* */ `By`.* from t",
+		input: "select /* \"By\".* */ \"By\".* from t",
 	}, {
 		input: "select /* select with bool expr */ a = b from t",
 	}, {
@@ -190,7 +190,7 @@ var (
 	}, {
 		input: "select /* use */ 1 from t1 use index (a) where b = 1",
 	}, {
-		input: "select /* keyword index */ 1 from t1 use index (`By`) where b = 1",
+		input: "select /* keyword index */ 1 from t1 use index (\"By\") where b = 1",
 	}, {
 		input: "select /* ignore */ 1 from t1 as t2 ignore index (a), t3 use index (b) where b = 1",
 	}, {
@@ -209,7 +209,7 @@ var (
 		input:  "select /* string table alias without as */ 1 from t 't1'",
 		output: "select /* string table alias without as */ 1 from t as t1",
 	}, {
-		input: "select /* keyword table alias */ 1 from t as `By`",
+		input: "select /* keyword table alias */ 1 from t as \"By\"",
 	}, {
 		input: "select /* join */ 1 from t1 join t2",
 	}, {
@@ -267,7 +267,7 @@ var (
 	}, {
 		input: "select /* s.t */ 1 from s.t",
 	}, {
-		input: "select /* keyword schema & table name */ 1 from `By`.`bY`",
+		input: "select /* keyword schema & table name */ 1 from \"By\".\"bY\"",
 	}, {
 		input: "select /* select in from */ 1 from (select 1 from t) as a",
 	}, {
@@ -437,20 +437,11 @@ var (
 	}, {
 		input: "select /* a.b.c */ a.b.c from t",
 	}, {
-		input: "select /* keyword a.b */ `By`.`bY` from t",
+		input: "select /* keyword a.b */ \"By\".\"bY\" from t",
 	}, {
 		input: "select /* string */ 'a' from t",
 	}, {
-		input:  "select /* double quoted string */ \"a\" from t",
-		output: "select /* double quoted string */ 'a' from t",
-	}, {
 		input: "select /* quote quote in string */ 'a''a' from t",
-	}, {
-		input:  "select /* double quote quote in string */ \"a\"\"a\" from t",
-		output: "select /* double quote quote in string */ 'a\\\"a' from t",
-	}, {
-		input:  "select /* quote in double quoted string */ \"a'a\" from t",
-		output: "select /* quote in double quoted string */ 'a''a' from t",
 	}, {
 		input:  "select /* backslash quote in string */ 'a\\'a' from t",
 		output: "select /* backslash quote in string */ 'a''a' from t",
@@ -683,7 +674,7 @@ var (
 	}, {
 		input: "set @@session.autocommit = true",
 	}, {
-		input: "set @@session.`autocommit` = true",
+		input: "set @@session.\"autocommit\" = true",
 	}, {
 		input: "set @@session.'autocommit' = true",
 	}, {
@@ -763,8 +754,8 @@ var (
 		input:  "alter table a add unique key foo (column1)",
 		output: "alter table a",
 	}, {
-		input:  "alter table `By` add foo",
-		output: "alter table `By`",
+		input:  "alter table \"By\" add foo",
+		output: "alter table \"By\"",
 	}, {
 		input:  "alter table a alter foo",
 		output: "alter table a",
@@ -799,8 +790,8 @@ var (
 		input:  "alter table a rename b",
 		output: "rename table a to b",
 	}, {
-		input:  "alter table `By` rename `bY`",
-		output: "rename table `By` to `bY`",
+		input:  "alter table \"By\" rename \"bY\"",
+		output: "rename table \"By\" to \"bY\"",
 	}, {
 		input:  "alter table a rename to b",
 		output: "rename table a to b",
@@ -885,43 +876,43 @@ var (
 	}, {
 		input: "alter table a add vindex hash (id)",
 	}, {
-		input:  "alter table a add vindex `hash` (`id`)",
+		input:  "alter table a add vindex \"hash\" (\"id\")",
 		output: "alter table a add vindex hash (id)",
 	}, {
-		input:  "alter table a add vindex hash (id) using `hash`",
+		input:  "alter table a add vindex hash (id) using \"hash\"",
 		output: "alter table a add vindex hash (id) using hash",
 	}, {
-		input: "alter table a add vindex `add` (`add`)",
+		input: "alter table a add vindex \"add\" (\"add\")",
 	}, {
 		input: "alter table a add vindex hash (id) using hash",
 	}, {
-		input:  "alter table a add vindex hash (id) using `hash`",
+		input:  "alter table a add vindex hash (id) using \"hash\"",
 		output: "alter table a add vindex hash (id) using hash",
 	}, {
 		input: "alter table user add vindex name_lookup_vdx (name) using lookup_hash with owner=user, table=name_user_idx, from=name, to=user_id",
 	}, {
-		input:  "alter table user2 add vindex name_lastname_lookup_vdx (name,lastname) using lookup with owner=`user`, table=`name_lastname_keyspace_id_map`, from=`name,lastname`, to=`keyspace_id`",
+		input:  "alter table user2 add vindex name_lastname_lookup_vdx (name,lastname) using lookup with owner=\"user\", table=\"name_lastname_keyspace_id_map\", from=\"name,lastname\", to=\"keyspace_id\"",
 		output: "alter table user2 add vindex name_lastname_lookup_vdx (name, lastname) using lookup with owner=user, table=name_lastname_keyspace_id_map, from=name,lastname, to=keyspace_id",
 	}, {
 		input: "alter table a drop vindex hash",
 	}, {
-		input:  "alter table a drop vindex `hash`",
+		input:  "alter table a drop vindex \"hash\"",
 		output: "alter table a drop vindex hash",
 	}, {
 		input:  "alter table a drop vindex hash",
 		output: "alter table a drop vindex hash",
 	}, {
-		input:  "alter table a drop vindex `add`",
-		output: "alter table a drop vindex `add`",
+		input:  "alter table a drop vindex \"add\"",
+		output: "alter table a drop vindex \"add\"",
 	}, {
 		input: "create table a",
 	}, {
-		input:  "create table a (\n\t`a` int\n)",
+		input:  "create table a (\n\t\"a\" int\n)",
 		output: "create table a (\n\ta int\n)",
 	}, {
-		input: "create table `by` (\n\t`by` char\n)",
+		input: "create table \"by\" (\n\t\"by\" char\n)",
 	}, {
-		input:  "create table if not exists a (\n\t`a` int\n)",
+		input:  "create table if not exists a (\n\t\"a\" int\n)",
 		output: "create table a (\n\ta int\n)",
 	}, {
 		input:  "create table a ignore me this is garbage",
@@ -1170,10 +1161,10 @@ var (
 		output: "use db",
 	}, {
 		input:  "use duplicate",
-		output: "use `duplicate`",
+		output: "use \"duplicate\"",
 	}, {
-		input:  "use `ks:-80@master`",
-		output: "use `ks:-80@master`",
+		input:  "use \"ks:-80@master\"",
+		output: "use \"ks:-80@master\"",
 	}, {
 		input:  "describe foobar",
 		output: "otherread",
@@ -1323,14 +1314,40 @@ var (
 	}, {
 		input: "select CAST('4' AS integer)",
 	}, {
+		input: "select CAST(myColumn AS integer) from myTable",
+	}, {
+		input: "select CAST(myColumn AS integer) as \"myColumn\" from test",
+	}, {
 		input: "select * from ia_plugins where tags ?& array['c', 'd']",
 	}, {
 		input: "select * from ia_plugins where tags ?& array[1, 2, 3]",
+	}, {
+		input:  "update clark_test set jsonbarray = array_to_json(array(select json_object_keys(CAST(assets AS json))))",
+		output: "update clark_test set jsonbarray = array_to_json(array((select json_object_keys(CAST(assets AS json)))))",
 	}, {
 		input:  "select a from b where a ?| '{a,b,c}'::text[]",
 		output: "select a from b where a ?| CAST('{a,b,c}' AS text[])",
 	}}
 )
+
+func TestBreakdown(t *testing.T) {
+	input := `select CAST("myColumn" AS integer) from myTable`
+	tree, err := Parse(input)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(String(tree))
+	t.Logf("%T: %+v", tree, tree)
+
+	_ = tree.walkSubtree(nil, func(action string, ctx interface{}, node SQLNode) (bool, error) {
+		if action != "enter" {
+			return true, nil
+		}
+		t.Log(action, String(node))
+		t.Logf("   %T: %+v", node, node)
+		return true, nil
+	})
+}
 
 func TestValid(t *testing.T) {
 	for _, tcase := range validSQL {
@@ -1344,7 +1361,7 @@ func TestValid(t *testing.T) {
 		}
 		out := String(tree)
 		if out != tcase.output {
-			t.Errorf("Parse(%q) = %q, want: %q", tcase.input, out, tcase.output)
+			t.Errorf("Parse(%q)\n    = %q,\nwant: %q", tcase.input, out, tcase.output)
 		}
 		// This test just exercises the tree walking functionality.
 		// There's no way automated way to verify that a node calls
@@ -1361,7 +1378,7 @@ func TestCaseSensitivity(t *testing.T) {
 		input  string
 		output string
 	}{{
-		input:  "create table A (\n\t`B` int\n)",
+		input:  "create table A (\n\t\"B\" int\n)",
 		output: "create table A (\n\tB int\n)",
 	}, {
 		input:  "create index b on A",
@@ -1393,7 +1410,13 @@ func TestCaseSensitivity(t *testing.T) {
 	}, {
 		input: "select a from B",
 	}, {
-		input: "select A as B from C",
+		// TODO: this case's output should be unmodified from the input.
+		// I'm choosing to force double quotes in alias blocks right now,
+		// which is slightly weird but should be what users expect in most cases.
+		// To avoid this, we basically need to say "if an ID comes in quoted, it should stay quoted",
+		// but I don't want to modify the grammar that much right now.
+		input:  "select A as B from C",
+		output: "select A as \"B\" from C",
 	}, {
 		input: "select B.* from c",
 	}, {
@@ -1421,7 +1444,7 @@ func TestCaseSensitivity(t *testing.T) {
 	}, {
 		input: "insert into A(A, B) values (1, 2)",
 	}, {
-		input:  "CREATE TABLE A (\n\t`A` int\n)",
+		input:  "CREATE TABLE A (\n\t\"A\" int\n)",
 		output: "create table A (\n\tA int\n)",
 	}, {
 		input:  "create view A",
@@ -1509,22 +1532,22 @@ func TestKeywords(t *testing.T) {
 		input: "insert /* qualified function */ into t(a, b) values (test.PI(), 'b')",
 	}, {
 		input:  "select /* keyword in qualified id */ * from t join z on t.key = z.key",
-		output: "select /* keyword in qualified id */ * from t join z on t.`key` = z.`key`",
+		output: "select /* keyword in qualified id */ * from t join z on t.\"key\" = z.\"key\"",
 	}, {
 		input:  "select /* non-reserved keywords as unqualified cols */ date, view, offset from t",
-		output: "select /* non-reserved keywords as unqualified cols */ `date`, `view`, `offset` from t",
+		output: "select /* non-reserved keywords as unqualified cols */ \"date\", \"view\", \"offset\" from t",
 	}, {
 		input:  "select /* share and mode as cols */ share, mode from t where share = 'foo'",
-		output: "select /* share and mode as cols */ `share`, `mode` from t where `share` = 'foo'",
+		output: "select /* share and mode as cols */ \"share\", \"mode\" from t where \"share\" = 'foo'",
 	}, {
 		input:  "select /* unused keywords as cols */ write, varying from t where trailing = 'foo'",
-		output: "select /* unused keywords as cols */ `write`, `varying` from t where `trailing` = 'foo'",
+		output: "select /* unused keywords as cols */ \"write\", \"varying\" from t where \"trailing\" = 'foo'",
 	}, {
 		input:  "select status from t",
-		output: "select `status` from t",
+		output: "select \"status\" from t",
 	}, {
 		input:  "select variables from t",
-		output: "select `variables` from t",
+		output: "select \"variables\" from t",
 	}}
 
 	for _, tcase := range validSQL {
@@ -1953,16 +1976,16 @@ func TestCreateTableEscaped(t *testing.T) {
 		input  string
 		output string
 	}{{
-		input: "create table `a`(`id` int, primary key(`id`))",
+		input: "create table \"a\"(\"id\" int, primary key(\"id\"))",
 		output: "create table a (\n" +
 			"\tid int,\n" +
 			"\tprimary key (id)\n" +
 			")",
 	}, {
-		input: "create table `insert`(`update` int, primary key(`delete`))",
-		output: "create table `insert` (\n" +
-			"\t`update` int,\n" +
-			"\tprimary key (`delete`)\n" +
+		input: "create table \"insert\"(\"update\" int, primary key(\"delete\"))",
+		output: "create table \"insert\" (\n" +
+			"\t\"update\" int,\n" +
+			"\tprimary key (\"delete\")\n" +
 			")",
 	}}
 	for _, tcase := range testCases {

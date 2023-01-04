@@ -2306,7 +2306,11 @@ function_call_generic:
   as a result
 */
 function_call_keyword:
-  LEFT openb select_expression_list closeb
+  ARRAY subquery
+  {
+    $$ = &FuncExpr{Name: NewColIdent("array"), Exprs: SelectExprs{ &AliasedExpr{Expr: $2} } }
+  }
+| LEFT openb select_expression_list closeb
   {
     $$ = &FuncExpr{Name: NewColIdent("left"), Exprs: $3}
   }

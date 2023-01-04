@@ -647,8 +647,10 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 				return NE, nil
 			}
 			return int(ch), nil
-		case '\'', '"':
+		case '\'':
 			return tkn.scanString(ch, STRING)
+		case '"':
+			return tkn.scanString(ch, ID)
 		case '`':
 			return tkn.scanLiteralIdentifier()
 		default:
@@ -959,6 +961,10 @@ func (tkn *Tokenizer) reset() {
 
 func isLetter(ch uint16) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_' || ch == '@'
+}
+
+func isCapitalLetter(ch uint16) bool {
+	return 'A' <= ch && ch <= 'Z'
 }
 
 func isCarat(ch uint16) bool {

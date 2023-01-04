@@ -1540,7 +1540,8 @@ type AliasedExpr struct {
 func (node *AliasedExpr) Format(ctx Rewriter, buf *TrackedBuffer) {
 	buf.Myprintf(ctx, "%v", node.Expr)
 	if !node.As.IsEmpty() {
-		buf.Myprintf(ctx, " as %v", node.As)
+		_, _ = buf.WriteString(" as ")
+		formatID(buf, node.As.val, node.As.Lowered(), true)
 	}
 }
 
@@ -1878,6 +1879,9 @@ const (
 
 // Format formats the node.
 func (node *IndexHints) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
 	buf.Myprintf(ctx, " %sindex ", node.Type)
 	prefix := "("
 	for _, n := range node.Indexes {
@@ -2893,7 +2897,11 @@ type ConvertExpr struct {
 
 // Format formats the node.
 func (node *ConvertExpr) Format(ctx Rewriter, buf *TrackedBuffer) {
-	buf.Myprintf(ctx, "CAST(%v AS %v)", node.Expr, node.Type)
+	_, _ = buf.WriteString("CAST(")
+	node.Expr.Format(ctx, buf)
+	_, _ = buf.WriteString(" AS ")
+	node.Type.Format(ctx, buf)
+	_, _ = buf.WriteString(")")
 }
 
 func (node *ConvertExpr) walkSubtree(ctx interface{}, visit Visit) error {
@@ -3363,7 +3371,7 @@ func NewColIdent(str string) ColIdent {
 
 // Format formats the node.
 func (node ColIdent) Format(ctx Rewriter, buf *TrackedBuffer) {
-	formatID(buf, node.val, node.Lowered())
+	formatID(buf, node.val, node.Lowered(), false)
 }
 
 func (node ColIdent) walkSubtree(ctx interface{}, visit Visit) error {
@@ -3445,7 +3453,7 @@ func (node TableIdent) Format(ctx Rewriter, buf *TrackedBuffer) {
 	if ctx != nil {
 		replaced = ctx.ReplacementString(node.v)
 	}
-	formatID(buf, replaced, strings.ToLower(replaced))
+	formatID(buf, replaced, strings.ToLower(replaced), false)
 }
 
 func (node TableIdent) walkSubtree(ctx interface{}, visit Visit) error {
@@ -3505,34 +3513,42 @@ func Backtick(in string) string {
 	return buf.String()
 }
 
-func formatID(buf *TrackedBuffer, original, lowered string) {
+func formatID(buf *TrackedBuffer, original, lowered string, requireQuotesForUppercase bool) {
 	isDbSystemVariable := false
 	if len(original) > 1 && original[:2] == "@@" {
 		isDbSystemVariable = true
 	}
 
+	mustQuote := false
 	for i, c := range original {
 		if !isLetter(uint16(c)) && (!isDbSystemVariable || !isCarat(uint16(c))) {
 			if i == 0 || !isDigit(uint16(c)) {
-				goto mustEscape
+				mustQuote = true
+				break
 			}
+		}
+		if isCapitalLetter(uint16(c)) && requireQuotesForUppercase {
+			mustQuote = true
+			break
 		}
 	}
 	if _, ok := keywords[lowered]; ok {
-		goto mustEscape
+		mustQuote = true
 	}
-	buf.Myprintf(nil, "%s", original)
-	return
 
-mustEscape:
-	buf.WriteByte('`')
+	if !mustQuote {
+		_, _ = buf.WriteString(original)
+		return
+	}
+
+	buf.WriteByte('"')
 	for _, c := range original {
 		buf.WriteRune(c)
-		if c == '`' {
-			buf.WriteByte('`')
+		if c == '"' {
+			buf.WriteByte('"')
 		}
 	}
-	buf.WriteByte('`')
+	buf.WriteByte('"')
 }
 
 func compliantName(in string) string {
