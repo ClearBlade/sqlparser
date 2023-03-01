@@ -507,6 +507,10 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 		case eofChar:
 			return 0, nil
 		case '=', ',', ';', '(', ')', '+', '*', '%', '^', '~', '[', ']':
+			if tkn.lastChar == '>' {
+				tkn.next()
+				return FUNCTION_ARG_ASSIGNMENT, nil
+			}
 			return int(ch), nil
 		case ':':
 			if tkn.lastChar == ':' {

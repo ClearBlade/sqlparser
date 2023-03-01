@@ -161,6 +161,9 @@ func init() {
 %token <empty> JSON_LEFT_CONTAINS_RIGHT_OP
 %token <empty> JSON_RIGHT_CONTAINS_LEFT_OP
 
+// Function argument assignment
+%token <empty> FUNCTION_ARG_ASSIGNMENT
+
 // DDL Tokens
 %token <bytes> CREATE ALTER DROP RENAME ANALYZE ADD
 %token <bytes> SCHEMA TABLE INDEX VIEW TO IGNORE IF UNIQUE PRIMARY COLUMN CONSTRAINT SPATIAL FULLTEXT FOREIGN KEY_BLOCK_SIZE
@@ -2232,6 +2235,10 @@ value_expression:
   {
     $$ = &CollateExpr{Expr: $1, Charset: $3}
   }
+| value_expression FUNCTION_ARG_ASSIGNMENT value_expression
+  {
+    $$ = &FunctionArgAssignmentExpr{Argument: $1, Operator: FuncArgAssignStr, Value: $3}
+  }
 | BINARY value_expression %prec UNARY
   {
     $$ = &UnaryExpr{Operator: BinaryStr, Expr: $2}
@@ -2270,13 +2277,13 @@ value_expression:
   {
     $$ = &UnaryExpr{Operator: BangStr, Expr: $2}
   }
-| INTERVAL value_expression sql_id
+| INTERVAL value_expression
   {
     // This rule prevents the usage of INTERVAL
     // as a function. If support is needed for that,
     // we'll need to revisit this. The solution
     // will be non-trivial because of grammar conflicts.
-    $$ = &IntervalExpr{Expr: $2, Unit: $3.String()}
+    $$ = &IntervalExpr{Expr: $2}
   }
 | function_call_generic
 | function_call_keyword

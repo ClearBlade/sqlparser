@@ -1953,35 +1953,36 @@ type Expr interface {
 	SQLNode
 }
 
-func (*AndExpr) iExpr()          {}
-func (*OrExpr) iExpr()           {}
-func (*NotExpr) iExpr()          {}
-func (*ParenExpr) iExpr()        {}
-func (*ComparisonExpr) iExpr()   {}
-func (*RangeCond) iExpr()        {}
-func (*IsExpr) iExpr()           {}
-func (*ExistsExpr) iExpr()       {}
-func (*SQLVal) iExpr()           {}
-func (*NullVal) iExpr()          {}
-func (BoolVal) iExpr()           {}
-func (*ColName) iExpr()          {}
-func (ValTuple) iExpr()          {}
-func (Array) iExpr()             {}
-func (*Subquery) iExpr()         {}
-func (ListArg) iExpr()           {}
-func (*BinaryExpr) iExpr()       {}
-func (*UnaryExpr) iExpr()        {}
-func (*IntervalExpr) iExpr()     {}
-func (*CollateExpr) iExpr()      {}
-func (*FuncExpr) iExpr()         {}
-func (*CaseExpr) iExpr()         {}
-func (*ValuesFuncExpr) iExpr()   {}
-func (*ConvertExpr) iExpr()      {}
-func (*SubstrExpr) iExpr()       {}
-func (*ConvertUsingExpr) iExpr() {}
-func (*MatchExpr) iExpr()        {}
-func (*GroupConcatExpr) iExpr()  {}
-func (*Default) iExpr()          {}
+func (*AndExpr) iExpr()                   {}
+func (*OrExpr) iExpr()                    {}
+func (*NotExpr) iExpr()                   {}
+func (*ParenExpr) iExpr()                 {}
+func (*ComparisonExpr) iExpr()            {}
+func (*RangeCond) iExpr()                 {}
+func (*IsExpr) iExpr()                    {}
+func (*ExistsExpr) iExpr()                {}
+func (*SQLVal) iExpr()                    {}
+func (*NullVal) iExpr()                   {}
+func (BoolVal) iExpr()                    {}
+func (*ColName) iExpr()                   {}
+func (ValTuple) iExpr()                   {}
+func (Array) iExpr()                      {}
+func (*Subquery) iExpr()                  {}
+func (ListArg) iExpr()                    {}
+func (*BinaryExpr) iExpr()                {}
+func (*UnaryExpr) iExpr()                 {}
+func (*IntervalExpr) iExpr()              {}
+func (*CollateExpr) iExpr()               {}
+func (*FuncExpr) iExpr()                  {}
+func (*CaseExpr) iExpr()                  {}
+func (*ValuesFuncExpr) iExpr()            {}
+func (*ConvertExpr) iExpr()               {}
+func (*SubstrExpr) iExpr()                {}
+func (*ConvertUsingExpr) iExpr()          {}
+func (*MatchExpr) iExpr()                 {}
+func (*GroupConcatExpr) iExpr()           {}
+func (*Default) iExpr()                   {}
+func (*FunctionArgAssignmentExpr) iExpr() {}
 
 // ReplaceExpr finds the from expression from root
 // and replaces it with to. If from matches root,
@@ -2662,12 +2663,11 @@ func (node *UnaryExpr) replace(from, to Expr) bool {
 // IntervalExpr represents a date-time INTERVAL expression.
 type IntervalExpr struct {
 	Expr Expr
-	Unit string
 }
 
 // Format formats the node.
 func (node *IntervalExpr) Format(ctx Rewriter, buf *TrackedBuffer) {
-	buf.Myprintf(ctx, "interval %v %s", node.Expr, node.Unit)
+	buf.Myprintf(ctx, "interval %v", node.Expr)
 }
 
 func (node *IntervalExpr) walkSubtree(ctx interface{}, visit Visit) error {
@@ -2709,6 +2709,36 @@ func (node *CollateExpr) walkSubtree(ctx interface{}, visit Visit) error {
 
 func (node *CollateExpr) replace(from, to Expr) bool {
 	return replaceExprs(from, to, &node.Expr)
+}
+
+const (
+	FuncArgAssignStr = "=>"
+)
+
+type FunctionArgAssignmentExpr struct {
+	Operator        string
+	Argument, Value Expr
+}
+
+// Format formats the node.
+func (node *FunctionArgAssignmentExpr) Format(ctx Rewriter, buf *TrackedBuffer) {
+	buf.Myprintf(ctx, "%v %s %v", node.Argument, node.Operator, node.Value)
+}
+
+func (node *FunctionArgAssignmentExpr) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+	return Walk(
+		ctx,
+		visit,
+		node.Argument,
+		node.Value,
+	)
+}
+
+func (node *FunctionArgAssignmentExpr) replace(from, to Expr) bool {
+	return replaceExprs(from, to, &node.Argument, &node.Value)
 }
 
 // FuncExpr represents a function call.

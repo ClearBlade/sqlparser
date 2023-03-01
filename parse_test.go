@@ -517,9 +517,9 @@ var (
 	}, {
 		input: "select /* ~ binary */ ~ binary b from t",
 	}, {
-		input: "select /* interval */ adddate('2008-01-02', interval 31 day) from t",
+		input: "select /* interval */ adddate('2008-01-02', interval '31 day') from t",
 	}, {
-		input: "select /* interval keyword */ adddate('2008-01-02', interval 1 year) from t",
+		input: "select /* interval keyword */ adddate('2008-01-02', interval '1 year') from t",
 	}, {
 		input: "select /* dual */ 1",
 	}, {
@@ -1327,7 +1327,11 @@ var (
 	}, {
 		input:  "select a from b where a ?| '{a,b,c}'::text[]",
 		output: "select a from b where a ?| CAST('{a,b,c}' AS text[])",
-	}}
+	}, {
+		input:  "select name, time_bucket(interval '1 day', tm_column => 'time', yolo_column => interval '4 days', interval '9 months') as bucket, AVG(value) from test group by name, bucket",
+		output: "select name, time_bucket(interval '1 day', tm_column => 'time', yolo_column => interval '4 days', interval '9 months') as bucket, AVG(value) from test group by name, bucket",
+	},
+	}
 )
 
 func TestBreakdown(t *testing.T) {
@@ -1525,7 +1529,7 @@ func TestKeywords(t *testing.T) {
 	}, {
 		input: "select left(a, 5) from t",
 	}, {
-		input: "update t set d = adddate(date('2003-12-31 01:02:03'), interval 5 days)",
+		input: "update t set d = adddate(date('2003-12-31 01:02:03'), interval '5 days')",
 	}, {
 		input: "insert into t(a, b) values (left('foo', 1), 'b')",
 	}, {
