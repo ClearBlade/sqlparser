@@ -1172,9 +1172,6 @@ var (
 		input:  "desc foobar",
 		output: "otherread",
 	}, {
-		input:  "explain foobar",
-		output: "otherread",
-	}, {
 		input:  "truncate table foo",
 		output: "truncate table foo",
 	}, {
@@ -1330,6 +1327,10 @@ var (
 	}, {
 		input:  "select name, time_bucket(interval '1 day', tm_column => 'time', yolo_column => interval '4 days', interval '9 months') as bucket, AVG(value) from test group by name, bucket",
 		output: "select name, time_bucket(interval '1 day', tm_column => 'time', yolo_column => interval '4 days', interval '9 months') as bucket, AVG(value) from test group by name, bucket",
+	}, {
+		input: "explain select * from some_table",
+	}, {
+		input: "explain analyze select * from some_table",
 	},
 	}
 )

@@ -214,7 +214,7 @@ func init() {
 %type <statement> stream_statement insert_statement update_statement delete_statement set_statement
 %type <statement> create_statement alter_statement rename_statement drop_statement truncate_statement
 %type <ddl> create_table_prefix
-%type <statement> analyze_statement show_statement use_statement other_statement
+%type <statement> analyze_statement show_statement use_statement other_statement explain_statement
 %type <statement> begin_statement commit_statement rollback_statement
 %type <bytes2> comment_opt comment_list
 %type <str> union_op insert_or_replace
@@ -342,6 +342,7 @@ command:
 | begin_statement
 | commit_statement
 | rollback_statement
+| explain_statement
 | other_statement
 
 select_statement:
@@ -1538,16 +1539,22 @@ rollback_statement:
     $$ = &Rollback{}
   }
 
+explain_statement:
+  EXPLAIN command
+  {
+    $$ = &Explain{stmt: $2}
+  }
+| EXPLAIN ANALYZE command
+  {
+    $$ = &Explain{stmt: $3, analyze: true}
+  }
+
 other_statement:
   DESC force_eof
   {
     $$ = &OtherRead{}
   }
 | DESCRIBE force_eof
-  {
-    $$ = &OtherRead{}
-  }
-| EXPLAIN force_eof
   {
     $$ = &OtherRead{}
   }

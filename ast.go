@@ -1432,6 +1432,25 @@ func (node *Rollback) walkSubtree(ctx interface{}, visit Visit) error {
 	return nil
 }
 
+type Explain struct {
+	analyze bool
+	stmt    Statement
+}
+
+func (node *Explain) Format(ctx Rewriter, buf *TrackedBuffer) {
+	buf.WriteString("explain ")
+	if node.analyze {
+		buf.WriteString("analyze ")
+	}
+	node.stmt.Format(ctx, buf)
+}
+
+func (node *Explain) walkSubtree(ctx interface{}, visit Visit) error {
+	return nil
+}
+
+func (*Explain) iStatement() {}
+
 // OtherRead represents a DESCRIBE, or EXPLAIN statement.
 // It should be used only as an indicator. It does not contain
 // the full AST for the statement.
