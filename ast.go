@@ -1433,16 +1433,16 @@ func (node *Rollback) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 type Explain struct {
-	analyze bool
-	stmt    Statement
+	Analyze bool
+	Stmt    Statement
 }
 
 func (node *Explain) Format(ctx Rewriter, buf *TrackedBuffer) {
 	buf.WriteString("explain ")
-	if node.analyze {
+	if node.Analyze {
 		buf.WriteString("analyze ")
 	}
-	node.stmt.Format(ctx, buf)
+	node.Stmt.Format(ctx, buf)
 }
 
 func (node *Explain) walkSubtree(ctx interface{}, visit Visit) error {

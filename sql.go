@@ -4288,13 +4288,13 @@ yydefault:
 		yyDollar = yyS[yypt-2 : yypt+1]
 //line sql.y:1544
 		{
-			yyVAL.statement = &Explain{stmt: yyDollar[2].statement}
+			yyVAL.statement = &Explain{Stmt: yyDollar[2].statement}
 		}
 	case 274:
 		yyDollar = yyS[yypt-3 : yypt+1]
 //line sql.y:1548
 		{
-			yyVAL.statement = &Explain{stmt: yyDollar[3].statement, analyze: true}
+			yyVAL.statement = &Explain{Stmt: yyDollar[3].statement, Analyze: true}
 		}
 	case 275:
 		yyDollar = yyS[yypt-2 : yypt+1]

@@ -1542,11 +1542,11 @@ rollback_statement:
 explain_statement:
   EXPLAIN command
   {
-    $$ = &Explain{stmt: $2}
+    $$ = &Explain{Stmt: $2}
   }
 | EXPLAIN ANALYZE command
   {
-    $$ = &Explain{stmt: $3, analyze: true}
+    $$ = &Explain{Stmt: $3, Analyze: true}
   }
 
 other_statement:
