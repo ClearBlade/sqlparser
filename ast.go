@@ -1446,7 +1446,7 @@ func (node *Explain) Format(ctx Rewriter, buf *TrackedBuffer) {
 }
 
 func (node *Explain) walkSubtree(ctx interface{}, visit Visit) error {
-	return nil
+	return Walk(ctx, visit, node.Stmt)
 }
 
 func (*Explain) iStatement() {}
