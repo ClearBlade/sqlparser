@@ -3423,7 +3423,7 @@ func (node *OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 type ConflictTarget struct {
-	Cols    Columns
+	Index   *ColName
 	Collate string
 	Where   *Where
 }
@@ -3434,14 +3434,14 @@ func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
 	}
 
 	if node.Collate != "" {
-		buf.Myprintf(ctx, "%v COLLATE %v%v", node.Cols, node.Collate, node.Where)
+		buf.Myprintf(ctx, " %v collate \"%s\"%v", node.Index, node.Collate, node.Where)
 	} else {
-		buf.Myprintf(ctx, "%v%v", node.Cols, node.Where)
+		buf.Myprintf(ctx, " %v%v", node.Index, node.Where)
 	}
 }
 
 func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
-	return Walk(ctx, visit, node.Cols, node.Where)
+	return Walk(ctx, visit, node.Index, node.Where)
 }
 
 type ConflictAction struct {
