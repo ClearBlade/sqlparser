@@ -122,7 +122,7 @@ func init() {
 %token LEX_ERROR
 %left <bytes> UNION
 %token <bytes> SELECT STREAM INSERT UPDATE DELETE FROM WHERE GROUP HAVING ORDER BY LIMIT OFFSET FOR CONFLICT
-%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE KEY DEFAULT SET LOCK KEYS
+%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE KEY DEFAULT SET LOCK KEYS DO NOTHING
 %token <bytes> VALUES LAST_INSERT_ID
 %token <bytes> NEXT VALUE SHARE MODE
 %token <bytes> SQL_NO_CACHE SQL_CACHE
@@ -2789,12 +2789,15 @@ on_conflict_opt:
     $$ = nil
   }
 | ON CONFLICT conflict_target conflict_action
-{
-  $$ = &OnConflict{ Target: $3, Action: $4, }
-}
+  {
+    $$ = &OnConflict{ Target: $3, Action: $4, }
+  }
 
 conflict_target:
-  column_list COLLATE collate_opt where_expression_opt
+  {
+    $$ = nil  
+  }
+| column_list COLLATE collate_opt where_expression_opt
   {
     $$ = &ConflictTarget{
       Cols: $1,
@@ -2802,7 +2805,7 @@ conflict_target:
       Where: NewWhere(WhereStr, $4),
     }
   }
-  | column_list where_expression_opt
+| column_list where_expression_opt
   {
     $$ = &ConflictTarget{
       Cols: $1,
@@ -2810,10 +2813,16 @@ conflict_target:
       Where: NewWhere(WhereStr, $2),
     }
   }
+  
 
 conflict_action:
+  DO NOTHING
   {
-    $$ = &ConflictAction{}
+    $$ = nil
+  }
+| DO UPDATE set_expression
+  {
+    $$ = &ConflictAction{ Update: $3, }
   }
 
 tuple_list:
@@ -3035,6 +3044,7 @@ reserved_keyword:
 | BY
 | CASE
 | COLLATE
+| CONFLICT
 | CONVERT
 | CREATE
 | CROSS

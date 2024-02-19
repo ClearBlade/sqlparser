@@ -635,9 +635,12 @@ func TestSplitStatementToPieces(t *testing.T) {
 func TestUpsert(t *testing.T) {
 	testcases := []struct {
 		query string
-	}{{
-		query: "INSERT INTO myCollection(item_id, name, jsonbColumn) VALUES('802277dd-29c9-4a50-830f-36ced1cabee5', 'Tester', '{}') ON CONFLICT (name) DO UPDATE myCollection SET 'jsonb' = jsonb_set(jsonbColumn, '{b, c}', '1')",
-	}}
+	}{
+		// {query: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5')"},
+		{query: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict do nothing"},
+		// { query: "INSERT INTO myTable(item_id) VALUES('802277dd-29c9-4a50-830f-36ced1cabee5') ON CONFLICT (item_id) DO NOTHING" },
+		// query: "INSERT INTO myCollection(item_id, name, jsonbColumn) VALUES('802277dd-29c9-4a50-830f-36ced1cabee5', 'Tester', '{}') ON CONFLICT (name) DO UPDATE myCollection SET 'jsonb' = jsonb_set(jsonbColumn, '{b, c}', '1')",
+	}
 
 	for _, test := range testcases {
 		tree, err := Parse(test.query)
@@ -649,7 +652,7 @@ func TestUpsert(t *testing.T) {
 		got := b.String()
 		want := test.query
 		if got != want {
-			t.Errorf("Append: %s, want %s", got, want)
+			t.Errorf("got: %s, want: %s", got, want)
 		}
 	}
 }
