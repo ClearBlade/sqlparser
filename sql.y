@@ -17,6 +17,10 @@ limitations under the License.
 %{
 package sqlparser
 
+import (
+  "fmt"
+)
+
 func setParseTree(yylex interface{}, stmt Statement) {
   yylex.(*Tokenizer).ParseTree = stmt
 }
@@ -122,12 +126,12 @@ func init() {
 %token LEX_ERROR
 %left <bytes> UNION
 %token <bytes> SELECT STREAM INSERT UPDATE DELETE FROM WHERE GROUP HAVING ORDER BY LIMIT OFFSET FOR CONFLICT
-%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE KEY DEFAULT SET LOCK KEYS DO NOTHING
+%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE KEY DEFAULT SET LOCK KEYS NOTHING
 %token <bytes> VALUES LAST_INSERT_ID
 %token <bytes> NEXT VALUE SHARE MODE
 %token <bytes> SQL_NO_CACHE SQL_CACHE
 %left <bytes> JOIN STRAIGHT_JOIN LEFT RIGHT INNER OUTER CROSS NATURAL USE FORCE
-%left <bytes> ON USING
+%left <bytes> ON USING DO
 %token <empty> '(' ',' ')'
 %token <bytes> ID HEX STRING INTEGRAL FLOAT HEXNUM VALUE_ARG COMMENT COMMENT_KEYWORD BIT_LITERAL
 %token <bytes> NULL TRUE FALSE
@@ -402,9 +406,20 @@ union_rhs:
     $$ = &ParenSelect{Select: $2}
   }
 
-
 insert_statement:
-  insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data on_dup_opt on_conflict_opt
+  insert_or_replace into_table_name insert_data on_conflict_opt
+  {
+    fmt.Println("INSERT PARSE")
+    // insert_data returns a *Insert pre-filled with Columns & Values
+    ins := $3
+    ins.Action = $1
+    //ins.Comments = $2
+    //ins.Ignore = $3
+    ins.Table = $2
+    ins.OnConflict = $4
+    $$ = ins
+  }
+  | insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data on_dup_opt
   {
     // insert_data returns a *Insert pre-filled with Columns & Values
     ins := $6
@@ -414,10 +429,9 @@ insert_statement:
     ins.Table = $4
     ins.Partitions = $5
     ins.OnDup = OnDup($7)
-    ins.OnConflict = $8
     $$ = ins
   }
-| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt on_conflict_opt
+| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt
   {
     cols := make(Columns, 0, len($7))
     vals := make(ValTuple, 0, len($8))
@@ -425,16 +439,18 @@ insert_statement:
       cols = append(cols, updateList.Name.Name)
       vals = append(vals, updateList.Expr)
     }
-    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8), OnConflict: $9}
+    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8)}
   }
 
 insert_or_replace:
   INSERT
   {
+    fmt.Println("INSERT CALED")
     $$ = InsertStr
   }
 | REPLACE
   {
+    fmt.Println("REPLACE CALED")
     $$ = ReplaceStr
   }
 
@@ -2732,27 +2748,33 @@ lock_opt:
 insert_data:
   VALUES tuple_list
   {
+    fmt.Println("INSERT DATA 1")
     $$ = &Insert{Rows: $2}
   }
 | select_statement
   {
+    fmt.Println("INSERT DATA 2")
     $$ = &Insert{Rows: $1}
   }
 | openb select_statement closeb
   {
+    fmt.Println("INSERT DATA 3")
     // Drop the redundant parenthesis.
     $$ = &Insert{Rows: $2}
   }
 | openb ins_column_list closeb VALUES tuple_list
   {
+    fmt.Println("INSERT DATA 4")
     $$ = &Insert{Columns: $2, Rows: $5}
   }
 | openb ins_column_list closeb select_statement
   {
+    fmt.Println("INSERT DATA 5")
     $$ = &Insert{Columns: $2, Rows: $4}
   }
 | openb ins_column_list closeb openb select_statement closeb
   {
+    fmt.Println("INSERT DATA 6")
     // Drop the redundant parenthesis.
     $$ = &Insert{Columns: $2, Rows: $5}
   }
@@ -2777,19 +2799,23 @@ ins_column_list:
 
 on_dup_opt:
   {
+    fmt.Println("DUP 1")
     $$ = nil
   }
 | ON DUPLICATE KEY UPDATE update_list
   {
+    fmt.Println("DUP 2")
     $$ = $5
   }
 
 on_conflict_opt:
   {
+    fmt.Println("1")
     $$ = nil
   }
 | ON CONFLICT conflict_target conflict_action
   {
+    fmt.Println("2")
     $$ = &OnConflict{ Target: $3, Action: $4, }
   }
 
@@ -2815,7 +2841,7 @@ conflict_target:
   }
   
 
-conflict_action:
+conflict_action: 
   DO NOTHING
   {
     $$ = nil
@@ -3094,6 +3120,7 @@ reserved_keyword:
 | MAXVALUE
 | MOD
 | NATURAL
+| NOTHING
 | NEXT // next should be doable as non-reserved, but is not due to the special `select next num_val` query that vitess supports
 | NOT
 | NULL

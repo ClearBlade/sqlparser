@@ -3415,7 +3415,7 @@ func (node *OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
 		return
 	}
 
-	buf.Myprintf(ctx, " on conflict %v%v", node.Target, node.Action)
+	buf.Myprintf(ctx, " on conflict%v%v", node.Target, node.Action)
 }
 
 func (node *OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
@@ -3450,6 +3450,7 @@ type ConflictAction struct {
 
 func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
 	if node == nil {
+		buf.Myprintf(ctx, " do nothing")
 		return
 	}
 
