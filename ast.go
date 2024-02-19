@@ -3403,12 +3403,22 @@ func (node OnDup) walkSubtree(ctx interface{}, visit Visit) error {
 	return Walk(ctx, visit, UpdateExprs(node))
 }
 
+// TODO: OnConflict Constraint
+
 // OnConflict represents an ON CONFLICT clause.
 type OnConflict struct {
-	Rows          InsertRows
-	WhereConflict Expr
-	Do            *UpdateExpr
-	WhereUpdate   Expr
+	Target *ConflictTarget
+	Action *ConflictAction
+}
+
+type ConflictTarget struct {
+	Cols    []ColIdent
+	Collate CollateExpr
+	Where   *Where
+}
+
+type ConflictAction struct {
+	Update Update
 }
 
 // Format formats the node
