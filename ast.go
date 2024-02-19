@@ -497,7 +497,7 @@ type Insert struct {
 	Columns    Columns
 	Rows       InsertRows
 	OnDup      OnDup
-	OnConflict OnConflict
+	OnConflict *OnConflict
 }
 
 // DDL strings.
@@ -3389,7 +3389,7 @@ func (node *SetExpr) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 // OnDup represents an ON DUPLICATE clause.
-type OnDup OnDup
+type OnDup UpdateExprs
 
 // Format formats the node.
 func (node OnDup) Format(ctx Rewriter, buf *TrackedBuffer) {
@@ -3411,26 +3411,51 @@ type OnConflict struct {
 	Action *ConflictAction
 }
 
+// Format formats the node
+func (node *OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
+
+	buf.Myprintf(ctx, " on conflict %v%v", node.Target, node.Action)
+}
+
+func (node *OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
+	return Walk(ctx, visit, node.Target, node.Action)
+}
+
 type ConflictTarget struct {
-	Cols    []ColIdent
-	Collate CollateExpr
+	Cols    Columns
+	Collate *CollateExpr
 	Where   *Where
+}
+
+func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
+
+	buf.Myprintf(ctx, "%v%v%v", node.Cols, node.Collate, node.Where)
+}
+
+func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
+	return Walk(ctx, visit, node.Cols, node.Collate, node.Where)
 }
 
 type ConflictAction struct {
 	Update Update
 }
 
-// Format formats the node
-func (node OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
+func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
 	if node == nil {
 		return
 	}
-	buf.Myprintf(ctx, " on conflict key update %v", UpdateExprs(node))
+
+	node.Update.Format(ctx, buf)
 }
 
-func (node OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
-	return Walk(ctx, visit, UpdateExprs(node))
+func (node *ConflictAction) walkSubtree(ctx interface{}, visit Visit) error {
+	return node.Update.walkSubtree(ctx, visit)
 }
 
 // ColIdent is a case insensitive SQL identifier. It will be escaped with

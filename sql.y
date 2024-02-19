@@ -259,6 +259,7 @@ func init() {
 %type <columns> ins_column_list column_list
 %type <partitions> opt_partition_clause partition_list
 %type <updateExprs> on_dup_opt
+%type <onConflict> on_conflict_opt
 %type <updateExprs> update_list
 %type <setExprs> set_list transaction_chars
 %type <bytes> charset_or_character_set
@@ -398,7 +399,7 @@ union_rhs:
 
 
 insert_statement:
-  insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data on_dup_opt
+  insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data on_dup_opt on_conflict_opt
   {
     // insert_data returns a *Insert pre-filled with Columns & Values
     ins := $6
@@ -408,9 +409,10 @@ insert_statement:
     ins.Table = $4
     ins.Partitions = $5
     ins.OnDup = OnDup($7)
+    ins.OnConflict = OnConflict($8)
     $$ = ins
   }
-| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt
+| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt on_conflict_opt
   {
     cols := make(Columns, 0, len($7))
     vals := make(ValTuple, 0, len($8))
@@ -418,7 +420,7 @@ insert_statement:
       cols = append(cols, updateList.Name.Name)
       vals = append(vals, updateList.Expr)
     }
-    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8)}
+    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8), ONConflict: OnConflict($9)}
   }
 
 insert_or_replace:
@@ -2775,6 +2777,31 @@ on_dup_opt:
 | ON DUPLICATE KEY UPDATE update_list
   {
     $$ = $5
+  }
+| ON CONFLICT ins_column_list UPDATE up
+
+on_conflict_opt:
+  {
+    $$ = nil
+  }
+| ON CONFLICT conflict_target conflict_action
+{
+  $$ = OnConflict{ Target: $3, Action: $4, }
+}
+
+conflict_target:
+  column_list collate_opt where_expression_opt
+  {
+    $$ = ConflictTarget{
+      Columns: $1,
+      Collate: $2,
+      Where: $3,
+    }
+  }
+
+conflict_action:
+  {
+    $$ = ConflictAction{}
   }
 
 tuple_list:
