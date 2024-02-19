@@ -114,6 +114,9 @@ func init() {
   vindexParam   VindexParam
   vindexParams  []VindexParam
   showFilter    *ShowFilter
+  onConflict    *OnConflict
+  conflictTarget *ConflictTarget
+  conflictAction *ConflictAction
 }
 
 %token LEX_ERROR
@@ -260,6 +263,8 @@ func init() {
 %type <partitions> opt_partition_clause partition_list
 %type <updateExprs> on_dup_opt
 %type <onConflict> on_conflict_opt
+%type <conflictAction> conflict_action
+%type <conflictTarget> conflict_target
 %type <updateExprs> update_list
 %type <setExprs> set_list transaction_chars
 %type <bytes> charset_or_character_set
@@ -409,7 +414,7 @@ insert_statement:
     ins.Table = $4
     ins.Partitions = $5
     ins.OnDup = OnDup($7)
-    ins.OnConflict = OnConflict($8)
+    ins.OnConflict = $8
     $$ = ins
   }
 | insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt on_conflict_opt
@@ -420,7 +425,7 @@ insert_statement:
       cols = append(cols, updateList.Name.Name)
       vals = append(vals, updateList.Expr)
     }
-    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8), ONConflict: OnConflict($9)}
+    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8), OnConflict: $9}
   }
 
 insert_or_replace:
@@ -2778,7 +2783,6 @@ on_dup_opt:
   {
     $$ = $5
   }
-| ON CONFLICT ins_column_list UPDATE up
 
 on_conflict_opt:
   {
@@ -2786,22 +2790,30 @@ on_conflict_opt:
   }
 | ON CONFLICT conflict_target conflict_action
 {
-  $$ = OnConflict{ Target: $3, Action: $4, }
+  $$ = &OnConflict{ Target: $3, Action: $4, }
 }
 
 conflict_target:
-  column_list collate_opt where_expression_opt
+  column_list COLLATE collate_opt where_expression_opt
   {
-    $$ = ConflictTarget{
-      Columns: $1,
-      Collate: $2,
-      Where: $3,
+    $$ = &ConflictTarget{
+      Cols: $1,
+      Collate: $3,
+      Where: NewWhere(WhereStr, $4),
+    }
+  }
+  | column_list where_expression_opt
+  {
+    $$ = &ConflictTarget{
+      Cols: $1,
+      Collate: "",
+      Where: NewWhere(WhereStr, $2),
     }
   }
 
 conflict_action:
   {
-    $$ = ConflictAction{}
+    $$ = &ConflictAction{}
   }
 
 tuple_list:
