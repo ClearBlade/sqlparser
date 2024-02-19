@@ -631,3 +631,25 @@ func TestSplitStatementToPieces(t *testing.T) {
 		}
 	}
 }
+
+func TestUpsert(t *testing.T) {
+	testcases := []struct {
+		query string
+	}{{
+		query: "INSERT INTO myCollection(item_id, name, jsonbColumn) VALUES('802277dd-29c9-4a50-830f-36ced1cabee5', 'Tester', '{}') ON CONFLICT (name) DO UPDATE myCollection SET 'jsonb' = jsonb_set(jsonbColumn, '{b, c}', '1')",
+	}}
+
+	for _, test := range testcases {
+		tree, err := Parse(test.query)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var b bytes.Buffer
+		Append(&b, tree)
+		got := b.String()
+		want := test.query
+		if got != want {
+			t.Errorf("Append: %s, want %s", got, want)
+		}
+	}
+}

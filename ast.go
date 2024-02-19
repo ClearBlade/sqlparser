@@ -497,6 +497,7 @@ type Insert struct {
 	Columns    Columns
 	Rows       InsertRows
 	OnDup      OnDup
+	OnConflict OnConflict
 }
 
 // DDL strings.
@@ -507,10 +508,10 @@ const (
 
 // Format formats the node.
 func (node *Insert) Format(ctx Rewriter, buf *TrackedBuffer) {
-	buf.Myprintf(ctx, "%s %v%sinto %v%v%v %v%v",
+	buf.Myprintf(ctx, "%s %v%sinto %v%v%v %v%v%v",
 		node.Action,
 		node.Comments, node.Ignore,
-		node.Table, node.Partitions, node.Columns, node.Rows, node.OnDup)
+		node.Table, node.Partitions, node.Columns, node.Rows, node.OnDup, node.OnConflict)
 }
 
 func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
@@ -525,6 +526,7 @@ func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
 		node.Columns,
 		node.Rows,
 		node.OnDup,
+		node.OnConflict,
 	)
 }
 
@@ -3386,8 +3388,8 @@ func (node *SetExpr) walkSubtree(ctx interface{}, visit Visit) error {
 	)
 }
 
-// OnDup represents an ON DUPLICATE KEY clause.
-type OnDup UpdateExprs
+// OnDup represents an ON DUPLICATE clause.
+type OnDup OnDup
 
 // Format formats the node.
 func (node OnDup) Format(ctx Rewriter, buf *TrackedBuffer) {
@@ -3398,6 +3400,26 @@ func (node OnDup) Format(ctx Rewriter, buf *TrackedBuffer) {
 }
 
 func (node OnDup) walkSubtree(ctx interface{}, visit Visit) error {
+	return Walk(ctx, visit, UpdateExprs(node))
+}
+
+// OnConflict represents an ON CONFLICT clause.
+type OnConflict struct {
+	Rows          InsertRows
+	WhereConflict Expr
+	Do            *UpdateExpr
+	WhereUpdate   Expr
+}
+
+// Format formats the node
+func (node OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
+	buf.Myprintf(ctx, " on conflict key update %v", UpdateExprs(node))
+}
+
+func (node OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
 	return Walk(ctx, visit, UpdateExprs(node))
 }
 
