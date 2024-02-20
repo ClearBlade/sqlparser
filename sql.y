@@ -17,10 +17,6 @@ limitations under the License.
 %{
 package sqlparser
 
-import (
-  "fmt"
-)
-
 func setParseTree(yylex interface{}, stmt Statement) {
   yylex.(*Tokenizer).ParseTree = stmt
 }
@@ -410,7 +406,6 @@ union_rhs:
 insert_statement:
   insert_or_replace into_table_name insert_data on_conflict_opt
   {
-    fmt.Println("INSERT PARSE")
     // insert_data returns a *Insert pre-filled with Columns & Values
     ins := $3
     ins.Action = $1
@@ -446,12 +441,10 @@ insert_statement:
 insert_or_replace:
   INSERT
   {
-    fmt.Println("INSERT CALED")
     $$ = InsertStr
   }
 | REPLACE
   {
-    fmt.Println("REPLACE CALED")
     $$ = ReplaceStr
   }
 
@@ -2749,33 +2742,27 @@ lock_opt:
 insert_data:
   VALUES tuple_list
   {
-    fmt.Println("INSERT DATA 1")
     $$ = &Insert{Rows: $2}
   }
 | select_statement
   {
-    fmt.Println("INSERT DATA 2")
     $$ = &Insert{Rows: $1}
   }
 | openb select_statement closeb
   {
-    fmt.Println("INSERT DATA 3")
     // Drop the redundant parenthesis.
     $$ = &Insert{Rows: $2}
   }
 | openb ins_column_list closeb VALUES tuple_list
   {
-    fmt.Println("INSERT DATA 4")
     $$ = &Insert{Columns: $2, Rows: $5}
   }
 | openb ins_column_list closeb select_statement
   {
-    fmt.Println("INSERT DATA 5")
     $$ = &Insert{Columns: $2, Rows: $4}
   }
 | openb ins_column_list closeb openb select_statement closeb
   {
-    fmt.Println("INSERT DATA 6")
     // Drop the redundant parenthesis.
     $$ = &Insert{Columns: $2, Rows: $5}
   }
@@ -2800,12 +2787,10 @@ ins_column_list:
 
 on_dup_opt:
   {
-    fmt.Println("DUP 1")
     $$ = nil
   }
 | ON DUPLICATE KEY UPDATE update_list
   {
-    fmt.Println("DUP 2")
     $$ = $5
   }
 
@@ -2832,7 +2817,6 @@ conflict_target:
   }
 | ON CONSTRAINT sql_id
 {
-  fmt.Printf("CONSTRAINT IS %v\n", $3)
   $$ = &ConflictTarget{
     Constraint: $3,
     Columns: Columns{},
