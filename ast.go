@@ -3478,6 +3478,10 @@ func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
 }
 
 func (node *ConflictAction) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+
 	return Walk(ctx, visit, node.Updates, node.Where)
 }
 
