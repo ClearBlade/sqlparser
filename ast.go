@@ -3423,6 +3423,10 @@ func (node *OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
 }
 
 func (node *OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+
 	return Walk(ctx, visit, node.Target, node.Action)
 }
 
@@ -3452,6 +3456,10 @@ func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
 }
 
 func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+
 	return Walk(ctx, visit, node.Constraint, node.Columns, node.Where)
 }
 
