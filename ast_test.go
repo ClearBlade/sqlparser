@@ -650,12 +650,10 @@ func TestUpsert(t *testing.T) {
 			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do nothing",
 			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do nothing",
 		},
-
-		// {
-		// 	input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
-		// 	output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
-		// },
-
+		{
+			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
+		},
 		{
 			input:  "insert into myTable(item_id, val) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do nothing",
 			output: "insert into myTable(item_id, val) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do nothing",

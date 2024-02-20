@@ -3423,9 +3423,10 @@ func (node *OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 type ConflictTarget struct {
-	Columns Columns
-	Collate string
-	Where   *Where
+	Columns    Columns
+	Constraint ColIdent
+	Collate    string
+	Where      *Where
 }
 
 func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
@@ -3433,15 +3434,21 @@ func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
 		return
 	}
 
+	if !node.Constraint.IsEmpty() {
+		buf.Myprintf(ctx, " on constraint %v", node.Constraint)
+		return
+	}
+
 	if node.Collate != "" {
 		buf.Myprintf(ctx, " %v collate \"%s\"%v", node.Columns, node.Collate, node.Where)
-	} else {
-		buf.Myprintf(ctx, " %v%v", node.Columns, node.Where)
+		return
 	}
+
+	buf.Myprintf(ctx, " %v%v", node.Columns, node.Where)
 }
 
 func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
-	return Walk(ctx, visit, node.Columns, node.Where)
+	return Walk(ctx, visit, node.Constraint, node.Columns, node.Where)
 }
 
 type ConflictAction struct {

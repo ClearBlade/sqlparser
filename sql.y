@@ -2830,6 +2830,16 @@ conflict_target:
       Where: NewWhere(WhereStr, $3),
     }
   }
+| ON CONSTRAINT sql_id
+{
+  fmt.Printf("CONSTRAINT IS %v\n", $3)
+  $$ = &ConflictTarget{
+    Constraint: $3,
+    Columns: Columns{},
+    Collate: "",
+    Where: nil,
+  }
+}
 
 conflict_columns_list:
   sql_id
