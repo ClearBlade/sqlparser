@@ -117,12 +117,13 @@ func init() {
   onConflict    *OnConflict
   conflictTarget *ConflictTarget
   conflictAction *ConflictAction
+  insertOptions InsertOptions
 }
 
 %token LEX_ERROR
 %left <bytes> UNION
-%token <bytes> SELECT STREAM INSERT UPDATE DELETE FROM WHERE GROUP HAVING ORDER BY LIMIT OFFSET FOR CONFLICT
-%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE KEY DEFAULT SET LOCK KEYS NOTHING
+%token <bytes> SELECT STREAM INSERT UPDATE DELETE FROM WHERE GROUP HAVING ORDER BY LIMIT OFFSET FOR
+%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE CONFLICT KEY DEFAULT SET LOCK KEYS NOTHING
 %token <bytes> VALUES LAST_INSERT_ID
 %token <bytes> NEXT VALUE SHARE MODE
 %token <bytes> SQL_NO_CACHE SQL_CACHE
@@ -313,6 +314,7 @@ func init() {
 %type <vindexParams> vindex_param_list vindex_params_opt
 %type <colIdent> vindex_type vindex_type_opt
 %type <bytes> alter_object_type
+%type <insertOptions> insert_options
 
 %start any_command
 
@@ -403,19 +405,20 @@ union_rhs:
     $$ = &ParenSelect{Select: $2}
   }
 
+insert_options:
+ {
+  $$ = InsertOptions{}
+ }
+ | ON on_dup_opt on_conflict_opt
+ {
+    $$ = InsertOptions{
+      OnDup: OnDup($2),
+      OnConflict: $3,
+    }
+ }
+
 insert_statement:
-  insert_or_replace into_table_name insert_data on_conflict_opt
-  {
-    // insert_data returns a *Insert pre-filled with Columns & Values
-    ins := $3
-    ins.Action = $1
-    //ins.Comments = $2
-    //ins.Ignore = $3
-    ins.Table = $2
-    ins.OnConflict = $4
-    $$ = ins
-  }
-  | insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data on_dup_opt
+  insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data insert_options
   {
     // insert_data returns a *Insert pre-filled with Columns & Values
     ins := $6
@@ -424,18 +427,18 @@ insert_statement:
     ins.Ignore = $3
     ins.Table = $4
     ins.Partitions = $5
-    ins.OnDup = OnDup($7)
+    ins.Options = $7
     $$ = ins
   }
-| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt
+| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list insert_options
   {
     cols := make(Columns, 0, len($7))
-    vals := make(ValTuple, 0, len($8))
+    vals := make(ValTuple, 0, len($8.OnDup))
     for _, updateList := range $7 {
       cols = append(cols, updateList.Name.Name)
       vals = append(vals, updateList.Expr)
     }
-    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8)}
+    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, Options: $8 }
   }
 
 insert_or_replace:
@@ -2789,18 +2792,18 @@ on_dup_opt:
   {
     $$ = nil
   }
-| ON DUPLICATE KEY UPDATE update_list
+| DUPLICATE KEY UPDATE update_list
   {
-    $$ = $5
+    $$ = $4
   }
 
 on_conflict_opt:
   {
     $$ = nil
   }
-| ON CONFLICT conflict_target conflict_action
+| CONFLICT conflict_target conflict_action
   {
-    $$ = &OnConflict{ Target: $3, Action: $4, }
+    $$ = &OnConflict{ Target: $2, Action: $3, }
   }
 
 conflict_target:
@@ -2841,10 +2844,10 @@ conflict_action:
   {
     $$ = nil
   }
-| DO UPDATE SET set_expression where_expression_opt
+| DO UPDATE SET update_list where_expression_opt
   {
     $$ = &ConflictAction{ 
-      Update: $4, 
+      Updates: $4, 
       Where: NewWhere(WhereStr, $5),
     }
   }
@@ -3068,7 +3071,6 @@ reserved_keyword:
 | BY
 | CASE
 | COLLATE
-| CONFLICT
 | CONVERT
 | CREATE
 | CROSS
@@ -3173,6 +3175,7 @@ non_reserved_keyword:
 | COMMENT_KEYWORD
 | COMMIT
 | COMMITTED
+| CONFLICT
 | DATE
 | DATETIME
 | DECIMAL

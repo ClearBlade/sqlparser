@@ -496,6 +496,10 @@ type Insert struct {
 	Partitions Partitions
 	Columns    Columns
 	Rows       InsertRows
+	Options    InsertOptions
+}
+
+type InsertOptions struct {
 	OnDup      OnDup
 	OnConflict *OnConflict
 }
@@ -511,7 +515,7 @@ func (node *Insert) Format(ctx Rewriter, buf *TrackedBuffer) {
 	buf.Myprintf(ctx, "%s %v%sinto %v%v%v %v%v%v",
 		node.Action,
 		node.Comments, node.Ignore,
-		node.Table, node.Partitions, node.Columns, node.Rows, node.OnDup, node.OnConflict)
+		node.Table, node.Partitions, node.Columns, node.Rows, node.Options.OnDup, node.Options.OnConflict)
 }
 
 func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
@@ -525,8 +529,8 @@ func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
 		node.Table,
 		node.Columns,
 		node.Rows,
-		node.OnDup,
-		node.OnConflict,
+		node.Options.OnConflict,
+		node.Options.OnDup,
 	)
 }
 
@@ -3452,8 +3456,8 @@ func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 type ConflictAction struct {
-	Update *SetExpr
-	Where  *Where
+	Updates UpdateExprs
+	Where   *Where
 }
 
 func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
@@ -3462,11 +3466,11 @@ func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
 		return
 	}
 
-	buf.Myprintf(ctx, " do update set %v%v", node.Update, node.Where)
+	buf.Myprintf(ctx, " do update set %v%v", node.Updates, node.Where)
 }
 
 func (node *ConflictAction) walkSubtree(ctx interface{}, visit Visit) error {
-	return Walk(ctx, visit, node.Update, node.Where)
+	return Walk(ctx, visit, node.Updates, node.Where)
 }
 
 // ColIdent is a case insensitive SQL identifier. It will be escaped with

@@ -637,10 +637,13 @@ func TestUpsert(t *testing.T) {
 		input  string
 		output string
 	}{
-		// Postgres style upserts
 		{
 			input:  "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5')",
 			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5')",
+		},
+		{
+			input:  "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') ON DUPLICATE KEY UPDATE item_id = 'conflicted'",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on duplicate key update item_id = 'conflicted'",
 		},
 		{
 			input:  "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict do nothing",
@@ -678,8 +681,15 @@ func TestUpsert(t *testing.T) {
 			input:  "INSERT INTO myCollection(item_id, name, jsonbColumn) VALUES('292a485f-a56a-4938-8f1a-bbbbbbbbbbb2', 'myName', '{}') ON CONFLICT (name) DO UPDATE SET jsonbColumn = jsonb_set(jsonbColumn, '{b, c}', '1');",
 			output: "insert into myCollection(item_id, name, jsonbColumn) values ('292a485f-a56a-4938-8f1a-bbbbbbbbbbb2', 'myName', '{}') on conflict (name) do update set jsonbColumn = jsonb_set(jsonbColumn, '{b, c}', '1')",
 		},
+		{
+			input:  "INSERT INTO myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') ON CONFLICT (item_id) do UPDATE SET item_id = 'conflicted', rand='123'",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do update set item_id = 'conflicted', rand = '123'",
+		},
 
-		// SQLite style upserts
+		// {
+		// 	input:  "insert into myTable(item_id, val) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do update set (item_id, val) = (0, 'conflicted')",
+		// 	output: "insert into myTable(item_id, val) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do update set (item_id, val) = (0, 'conflicted')",
+		// },
 	}
 
 	for _, test := range testcases {
