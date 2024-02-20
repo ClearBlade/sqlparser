@@ -3434,9 +3434,9 @@ func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
 	}
 
 	if node.Collate != "" {
-		buf.Myprintf(ctx, " %v collate \"%s\"%v", node.Index, node.Collate, node.Where)
+		buf.Myprintf(ctx, " (%v) collate \"%s\"%v", node.Index, node.Collate, node.Where)
 	} else {
-		buf.Myprintf(ctx, " %v%v", node.Index, node.Where)
+		buf.Myprintf(ctx, " (%v)%v", node.Index, node.Where)
 	}
 }
 
@@ -3446,6 +3446,7 @@ func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
 
 type ConflictAction struct {
 	Update *SetExpr
+	Where  *Where
 }
 
 func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
@@ -3454,11 +3455,11 @@ func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
 		return
 	}
 
-	node.Update.Format(ctx, buf)
+	buf.Myprintf(ctx, " do update set %v%v", node.Update, node.Where)
 }
 
 func (node *ConflictAction) walkSubtree(ctx interface{}, visit Visit) error {
-	return node.Update.walkSubtree(ctx, visit)
+	return Walk(ctx, visit, node.Update, node.Where)
 }
 
 // ColIdent is a case insensitive SQL identifier. It will be escaped with

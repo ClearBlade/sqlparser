@@ -2811,12 +2811,10 @@ on_dup_opt:
 
 on_conflict_opt:
   {
-    fmt.Println("1")
     $$ = nil
   }
 | ON CONFLICT conflict_target conflict_action
   {
-    fmt.Println("2")
     $$ = &OnConflict{ Target: $3, Action: $4, }
   }
 
@@ -2849,9 +2847,12 @@ conflict_action:
   {
     $$ = nil
   }
-| DO UPDATE set_expression
+| DO UPDATE SET set_expression where_expression_opt
   {
-    $$ = &ConflictAction{ Update: $3, }
+    $$ = &ConflictAction{ 
+      Update: $4, 
+      Where: NewWhere(WhereStr, $5),
+    }
   }
 
 tuple_list:
