@@ -650,6 +650,16 @@ func TestUpsert(t *testing.T) {
 			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do nothing",
 			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do nothing",
 		},
+
+		// {
+		// 	input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
+		// 	output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
+		// },
+
+		{
+			input:  "insert into myTable(item_id, val) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do nothing",
+			output: "insert into myTable(item_id, val) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do nothing",
+		},
 		{
 			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) COLLATE \"fr_FR\" do nothing",
 			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) collate \"fr_FR\" do nothing",
@@ -670,6 +680,7 @@ func TestUpsert(t *testing.T) {
 			input:  "INSERT INTO myCollection(item_id, name, jsonbColumn) VALUES('292a485f-a56a-4938-8f1a-bbbbbbbbbbb2', 'myName', '{}') ON CONFLICT (name) DO UPDATE SET jsonbColumn = jsonb_set(jsonbColumn, '{b, c}', '1');",
 			output: "insert into myCollection(item_id, name, jsonbColumn) values ('292a485f-a56a-4938-8f1a-bbbbbbbbbbb2', 'myName', '{}') on conflict (name) do update set jsonbColumn = jsonb_set(jsonbColumn, '{b, c}', '1')",
 		},
+
 		// SQLite style upserts
 	}
 

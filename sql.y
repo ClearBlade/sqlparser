@@ -269,7 +269,7 @@ func init() {
 %type <onConflict> on_conflict_opt
 %type <conflictAction> conflict_action
 %type <conflictTarget> conflict_target
-%type <colName> conflict_index
+%type <columns> conflict_columns_list
 %type <updateExprs> update_list
 %type <setExprs> set_list transaction_chars
 %type <bytes> charset_or_character_set
@@ -2822,21 +2822,21 @@ conflict_target:
   {
     $$ = nil  
   }
-| conflict_index collate_opt where_expression_opt
+| conflict_columns_list collate_opt where_expression_opt
   {
     $$ = &ConflictTarget{
-      Index: $1,
+      Columns: $1,
       Collate: $2,
       Where: NewWhere(WhereStr, $3),
     }
   }
 
-conflict_index:
-  column_name
+conflict_columns_list:
+  sql_id
   {
-    $$ = $1
+    $$ = Columns{$1}
   }
-  | '(' column_name ')'
+  | '(' column_list ')'
   {
     $$ = $2
   }
