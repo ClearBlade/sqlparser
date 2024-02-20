@@ -3407,13 +3407,11 @@ func (node OnDup) walkSubtree(ctx interface{}, visit Visit) error {
 	return Walk(ctx, visit, UpdateExprs(node))
 }
 
-// OnConflict represents an ON CONFLICT clause.
 type OnConflict struct {
 	Target *ConflictTarget
 	Action *ConflictAction
 }
 
-// Format formats the node
 func (node *OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
 	if node == nil {
 		return
