@@ -685,11 +685,6 @@ func TestUpsert(t *testing.T) {
 			input:  "INSERT INTO myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') ON CONFLICT (item_id) do UPDATE SET item_id = 'conflicted', rand='123'",
 			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do update set item_id = 'conflicted', rand = '123'",
 		},
-
-		// {
-		// 	input:  "insert into myTable(item_id, val) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do update set (item_id, val) = (0, 'conflicted')",
-		// 	output: "insert into myTable(item_id, val) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do update set (item_id, val) = (0, 'conflicted')",
-		// },
 	}
 
 	for _, test := range testcases {

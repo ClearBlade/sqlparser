@@ -405,6 +405,7 @@ union_rhs:
     $$ = &ParenSelect{Select: $2}
   }
 
+// Need to contain all "ON" optional clauses in one rule to disambiguate
 insert_options:
  {
   $$ = InsertOptions{}
@@ -3120,7 +3121,6 @@ reserved_keyword:
 | MAXVALUE
 | MOD
 | NATURAL
-| NOTHING
 | NEXT // next should be doable as non-reserved, but is not due to the special `select next num_val` query that vitess supports
 | NOT
 | NULL
@@ -3211,6 +3211,7 @@ non_reserved_keyword:
 | MULTIPOLYGON
 | NAMES
 | NCHAR
+| NOTHING
 | NUMERIC
 | OFFSET
 | ONLY

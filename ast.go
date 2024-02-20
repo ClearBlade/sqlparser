@@ -529,8 +529,8 @@ func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
 		node.Table,
 		node.Columns,
 		node.Rows,
-		node.Options.OnConflict,
 		node.Options.OnDup,
+		node.Options.OnConflict,
 	)
 }
 
@@ -3392,7 +3392,7 @@ func (node *SetExpr) walkSubtree(ctx interface{}, visit Visit) error {
 	)
 }
 
-// OnDup represents an ON DUPLICATE clause.
+// OnDup represents an ON DUPLICATE KEY clause.
 type OnDup UpdateExprs
 
 // Format formats the node.
