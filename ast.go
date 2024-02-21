@@ -496,7 +496,12 @@ type Insert struct {
 	Partitions Partitions
 	Columns    Columns
 	Rows       InsertRows
+	Options    InsertOptions
+}
+
+type InsertOptions struct {
 	OnDup      OnDup
+	OnConflict *OnConflict
 }
 
 // DDL strings.
@@ -507,10 +512,10 @@ const (
 
 // Format formats the node.
 func (node *Insert) Format(ctx Rewriter, buf *TrackedBuffer) {
-	buf.Myprintf(ctx, "%s %v%sinto %v%v%v %v%v",
+	buf.Myprintf(ctx, "%s %v%sinto %v%v%v %v%v%v",
 		node.Action,
 		node.Comments, node.Ignore,
-		node.Table, node.Partitions, node.Columns, node.Rows, node.OnDup)
+		node.Table, node.Partitions, node.Columns, node.Rows, node.Options.OnDup, node.Options.OnConflict)
 }
 
 func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
@@ -524,7 +529,8 @@ func (node *Insert) walkSubtree(ctx interface{}, visit Visit) error {
 		node.Table,
 		node.Columns,
 		node.Rows,
-		node.OnDup,
+		node.Options.OnDup,
+		node.Options.OnConflict,
 	)
 }
 
@@ -3399,6 +3405,82 @@ func (node OnDup) Format(ctx Rewriter, buf *TrackedBuffer) {
 
 func (node OnDup) walkSubtree(ctx interface{}, visit Visit) error {
 	return Walk(ctx, visit, UpdateExprs(node))
+}
+
+type OnConflict struct {
+	Target *ConflictTarget
+	Action *ConflictAction
+}
+
+func (node *OnConflict) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
+
+	buf.Myprintf(ctx, " on conflict%v%v", node.Target, node.Action)
+}
+
+func (node *OnConflict) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+
+	return Walk(ctx, visit, node.Target, node.Action)
+}
+
+type ConflictTarget struct {
+	Columns    Columns
+	Constraint ColIdent
+	Collate    string
+	Where      *Where
+}
+
+func (node *ConflictTarget) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		return
+	}
+
+	if !node.Constraint.IsEmpty() {
+		buf.Myprintf(ctx, " on constraint %v", node.Constraint)
+		return
+	}
+
+	if node.Collate != "" {
+		buf.Myprintf(ctx, " %v collate \"%s\"%v", node.Columns, node.Collate, node.Where)
+		return
+	}
+
+	buf.Myprintf(ctx, " %v%v", node.Columns, node.Where)
+}
+
+func (node *ConflictTarget) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+
+	return Walk(ctx, visit, node.Constraint, node.Columns, node.Where)
+}
+
+type ConflictAction struct {
+	Updates UpdateExprs
+	Where   *Where
+}
+
+func (node *ConflictAction) Format(ctx Rewriter, buf *TrackedBuffer) {
+	if node == nil {
+		buf.Myprintf(ctx, " do nothing")
+		return
+	}
+
+	buf.Myprintf(ctx, " do update set %v%v", node.Updates, node.Where)
+}
+
+func (node *ConflictAction) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+
+	return Walk(ctx, visit, node.Updates, node.Where)
 }
 
 // ColIdent is a case insensitive SQL identifier. It will be escaped with

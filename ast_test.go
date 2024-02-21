@@ -631,3 +631,73 @@ func TestSplitStatementToPieces(t *testing.T) {
 		}
 	}
 }
+
+func TestUpsert(t *testing.T) {
+	testcases := []struct {
+		input  string
+		output string
+	}{
+		{
+			input:  "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5')",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5')",
+		},
+		{
+			input:  "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') ON DUPLICATE KEY UPDATE item_id = 'conflicted'",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on duplicate key update item_id = 'conflicted'",
+		},
+		{
+			input:  "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict do nothing",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict do nothing",
+		},
+		{
+			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do nothing",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do nothing",
+		},
+		{
+			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict on constraint my_pk_constraint do nothing",
+		},
+		{
+			input:  "insert into myTable(item_id, val) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do nothing",
+			output: "insert into myTable(item_id, val) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id, val) do nothing",
+		},
+		{
+			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) COLLATE \"fr_FR\" do nothing",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) collate \"fr_FR\" do nothing",
+		},
+		{
+			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) WHERE item_id != '' do nothing",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) where item_id != '' do nothing",
+		},
+		{
+			input:  "insert into myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) WHERE item_id != '' do update set item_id = 'conflicted' where item_id = 'unconflicted'",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) where item_id != '' do update set item_id = 'conflicted' where item_id = 'unconflicted'",
+		},
+		{
+			input:  "INSERT INTO myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') ON CONFLICT (item_id) do UPDATE SET item_id = 'conflicted'",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do update set item_id = 'conflicted'",
+		},
+		{
+			input:  "INSERT INTO myCollection(item_id, name, jsonbColumn) VALUES('292a485f-a56a-4938-8f1a-bbbbbbbbbbb2', 'myName', '{}') ON CONFLICT (name) DO UPDATE SET jsonbColumn = jsonb_set(jsonbColumn, '{b, c}', '1');",
+			output: "insert into myCollection(item_id, name, jsonbColumn) values ('292a485f-a56a-4938-8f1a-bbbbbbbbbbb2', 'myName', '{}') on conflict (name) do update set jsonbColumn = jsonb_set(jsonbColumn, '{b, c}', '1')",
+		},
+		{
+			input:  "INSERT INTO myTable(item_id) values('802277dd-29c9-4a50-830f-36ced1cabee5') ON CONFLICT (item_id) do UPDATE SET item_id = 'conflicted', rand='123'",
+			output: "insert into myTable(item_id) values ('802277dd-29c9-4a50-830f-36ced1cabee5') on conflict (item_id) do update set item_id = 'conflicted', rand = '123'",
+		},
+	}
+
+	for _, test := range testcases {
+		tree, err := Parse(test.input)
+		if err != nil {
+			t.Fatal(err)
+		}
+		var b bytes.Buffer
+		Append(&b, tree)
+		got := b.String()
+		want := test.output
+		if got != want {
+			t.Errorf("got: %s, want: %s", got, want)
+		}
+	}
+}

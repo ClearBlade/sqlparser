@@ -114,17 +114,21 @@ func init() {
   vindexParam   VindexParam
   vindexParams  []VindexParam
   showFilter    *ShowFilter
+  onConflict    *OnConflict
+  conflictTarget *ConflictTarget
+  conflictAction *ConflictAction
+  insertOptions InsertOptions
 }
 
 %token LEX_ERROR
 %left <bytes> UNION
 %token <bytes> SELECT STREAM INSERT UPDATE DELETE FROM WHERE GROUP HAVING ORDER BY LIMIT OFFSET FOR
-%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE KEY DEFAULT SET LOCK KEYS
+%token <bytes> ALL DISTINCT AS EXISTS ASC DESC INTO DUPLICATE CONFLICT KEY DEFAULT SET LOCK KEYS NOTHING
 %token <bytes> VALUES LAST_INSERT_ID
 %token <bytes> NEXT VALUE SHARE MODE
 %token <bytes> SQL_NO_CACHE SQL_CACHE
 %left <bytes> JOIN STRAIGHT_JOIN LEFT RIGHT INNER OUTER CROSS NATURAL USE FORCE
-%left <bytes> ON USING
+%left <bytes> ON USING DO
 %token <empty> '(' ',' ')'
 %token <bytes> ID HEX STRING INTEGRAL FLOAT HEXNUM VALUE_ARG COMMENT COMMENT_KEYWORD BIT_LITERAL
 %token <bytes> NULL TRUE FALSE
@@ -259,6 +263,10 @@ func init() {
 %type <columns> ins_column_list column_list
 %type <partitions> opt_partition_clause partition_list
 %type <updateExprs> on_dup_opt
+%type <onConflict> on_conflict_opt
+%type <conflictAction> conflict_action
+%type <conflictTarget> conflict_target
+%type <columns> conflict_columns_list
 %type <updateExprs> update_list
 %type <setExprs> set_list transaction_chars
 %type <bytes> charset_or_character_set
@@ -306,6 +314,7 @@ func init() {
 %type <vindexParams> vindex_param_list vindex_params_opt
 %type <colIdent> vindex_type vindex_type_opt
 %type <bytes> alter_object_type
+%type <insertOptions> insert_options
 
 %start any_command
 
@@ -396,9 +405,21 @@ union_rhs:
     $$ = &ParenSelect{Select: $2}
   }
 
+// Need to contain all "ON" optional clauses in one rule to disambiguate
+insert_options:
+ {
+  $$ = InsertOptions{}
+ }
+ | ON on_dup_opt on_conflict_opt
+ {
+    $$ = InsertOptions{
+      OnDup: OnDup($2),
+      OnConflict: $3,
+    }
+ }
 
 insert_statement:
-  insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data on_dup_opt
+  insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause insert_data insert_options
   {
     // insert_data returns a *Insert pre-filled with Columns & Values
     ins := $6
@@ -407,18 +428,18 @@ insert_statement:
     ins.Ignore = $3
     ins.Table = $4
     ins.Partitions = $5
-    ins.OnDup = OnDup($7)
+    ins.Options = $7
     $$ = ins
   }
-| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list on_dup_opt
+| insert_or_replace comment_opt ignore_opt into_table_name opt_partition_clause SET update_list insert_options
   {
     cols := make(Columns, 0, len($7))
-    vals := make(ValTuple, 0, len($8))
+    vals := make(ValTuple, 0, len($8.OnDup))
     for _, updateList := range $7 {
       cols = append(cols, updateList.Name.Name)
       vals = append(vals, updateList.Expr)
     }
-    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, OnDup: OnDup($8)}
+    $$ = &Insert{Action: $1, Comments: Comments($2), Ignore: $3, Table: $4, Partitions: $5, Columns: cols, Rows: Values{vals}, Options: $8 }
   }
 
 insert_or_replace:
@@ -2772,9 +2793,64 @@ on_dup_opt:
   {
     $$ = nil
   }
-| ON DUPLICATE KEY UPDATE update_list
+| DUPLICATE KEY UPDATE update_list
   {
-    $$ = $5
+    $$ = $4
+  }
+
+on_conflict_opt:
+  {
+    $$ = nil
+  }
+| CONFLICT conflict_target conflict_action
+  {
+    $$ = &OnConflict{ Target: $2, Action: $3, }
+  }
+
+conflict_target:
+  {
+    $$ = nil  
+  }
+| conflict_columns_list collate_opt where_expression_opt
+  {
+    $$ = &ConflictTarget{
+      Columns: $1,
+      Collate: $2,
+      Where: NewWhere(WhereStr, $3),
+    }
+  }
+| ON CONSTRAINT sql_id
+{
+  $$ = &ConflictTarget{
+    Constraint: $3,
+    Columns: Columns{},
+    Collate: "",
+    Where: nil,
+  }
+}
+
+conflict_columns_list:
+  sql_id
+  {
+    $$ = Columns{$1}
+  }
+  | '(' column_list ')'
+  {
+    $$ = $2
+  }
+  
+
+conflict_action: 
+  DO NOTHING
+  {
+    $$ = nil
+  }
+| DO UPDATE SET update_list where_expression_opt
+  {
+    $$ = &ConflictAction{ 
+      Updates: $4, 
+      Where: NewWhere(WhereStr, $5),
+    }
   }
 
 tuple_list:
@@ -3099,6 +3175,7 @@ non_reserved_keyword:
 | COMMENT_KEYWORD
 | COMMIT
 | COMMITTED
+| CONFLICT
 | DATE
 | DATETIME
 | DECIMAL
@@ -3134,6 +3211,7 @@ non_reserved_keyword:
 | MULTIPOLYGON
 | NAMES
 | NCHAR
+| NOTHING
 | NUMERIC
 | OFFSET
 | ONLY
