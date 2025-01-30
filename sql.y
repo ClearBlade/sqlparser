@@ -2369,18 +2369,6 @@ function_call_keyword:
   {
     $$ = &ConvertUsingExpr{Expr: $3, Type: $5}
   }
-| MATCH openb select_expression_list closeb AGAINST openb value_expression match_option closeb
-  {
-  $$ = &MatchExpr{Columns: $3, Expr: $7, Option: $8}
-  }
-| CASE expression_opt when_expression_list else_expression_opt END
-  {
-    $$ = &CaseExpr{Expr: $2, Whens: $3, Else: $4}
-  }
-| VALUES openb column_name closeb
-  {
-    $$ = &ValuesFuncExpr{Name: $3}
-  }
 | SUBSTR openb column_name ',' value_expression closeb
   {
     $$ = &SubstrExpr{Name: $3, From: $5, To: nil}
@@ -2405,11 +2393,22 @@ function_call_keyword:
   {
     $$ = &SubstrExpr{Name: $3, From: $5, To: $7}
   }
+| MATCH openb select_expression_list closeb AGAINST openb value_expression match_option closeb
+  {
+  $$ = &MatchExpr{Columns: $3, Expr: $7, Option: $8}
+  }
 | GROUP_CONCAT openb distinct_opt select_expression_list order_by_opt separator_opt closeb
   {
     $$ = &GroupConcatExpr{Distinct: $3, Exprs: $4, OrderBy: $5, Separator: $6}
   }
-
+| CASE expression_opt when_expression_list else_expression_opt END
+  {
+    $$ = &CaseExpr{Expr: $2, Whens: $3, Else: $4}
+  }
+| VALUES openb column_name closeb
+  {
+    $$ = &ValuesFuncExpr{Name: $3}
+  }
 /*
   Function calls using non reserved keywords but with special syntax forms.
   Dedicated grammar rules are needed because of the special syntax
