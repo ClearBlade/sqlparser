@@ -812,7 +812,6 @@ exit:
 
 func (tkn *Tokenizer) scanString(delim uint16, typ int) (int, []byte) {
 	var buffer bytes2.Buffer
-
 	for {
 		ch := tkn.lastChar
 		if ch == eofChar {
