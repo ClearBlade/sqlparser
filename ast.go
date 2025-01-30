@@ -1980,6 +1980,7 @@ type Expr interface {
 
 func (*AndExpr) iExpr()                   {}
 func (*OrExpr) iExpr()                    {}
+func (*ConcatExpr) iExpr()                {}
 func (*NotExpr) iExpr()                   {}
 func (*ParenExpr) iExpr()                 {}
 func (*ComparisonExpr) iExpr()            {}
@@ -2109,6 +2110,33 @@ func (node *OrExpr) walkSubtree(ctx interface{}, visit Visit) error {
 }
 
 func (node *OrExpr) replace(from, to Expr) bool {
+	return replaceExprs(from, to, &node.Left, &node.Right)
+}
+
+// AndExpr represents an AND expression.
+type ConcatExpr struct {
+	Left, Right Expr
+}
+
+// Format formats the node.
+func (node *ConcatExpr) Format(ctx Rewriter, buf *TrackedBuffer) {
+	buf.Myprintf(ctx, "%v || %v", node.Left, node.Right)
+}
+
+func (node *ConcatExpr) walkSubtree(ctx interface{}, visit Visit) error {
+	if node == nil {
+		return nil
+	}
+	return Walk(
+		ctx,
+		visit,
+		node.Left,
+		node.Right,
+	)
+}
+
+// TODO: verify
+func (node *ConcatExpr) replace(from, to Expr) bool {
 	return replaceExprs(from, to, &node.Left, &node.Right)
 }
 

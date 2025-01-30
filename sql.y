@@ -137,7 +137,7 @@ func init() {
 // Some of these operators don't conflict in our situation. Nevertheless,
 // it's better to have these listed in the correct order. Also, we don't
 // support all operators yet.
-%left <bytes> OR
+%left <bytes> OR CONCAT
 %left <bytes> AND
 %right <bytes> NOT '!'
 %left <bytes> BETWEEN CASE WHEN THEN ELSE END
@@ -1947,6 +1947,10 @@ expression:
   {
     $$ = $1
   }
+| expression CONCAT expression
+  {
+    $$ = &ConcatExpr{Left: $1, Right: $3}
+  }
 | expression AND expression
   {
     $$ = &AndExpr{Left: $1, Right: $3}
@@ -2195,6 +2199,7 @@ value_expression:
   {
     $$ = &BinaryExpr{Left: $1, Operator: BitAndStr, Right: $3}
   }
+  // TODO: This is the issue
 | value_expression '|' value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: BitOrStr, Right: $3}

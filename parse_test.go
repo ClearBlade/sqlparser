@@ -33,6 +33,9 @@ var (
 	}, {
 		input: "select 1 from t",
 	}, {
+		input:  "select 'a' || 'b' from t where true",
+		output: "select 'a' || 'b' from t where true",
+	}, {
 		input: "select .1 from t",
 	}, {
 		input: "select 1.2e1 from t",
