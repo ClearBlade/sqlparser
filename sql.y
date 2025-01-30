@@ -227,7 +227,6 @@ func init() {
 %type <selectExprs> select_expression_list select_expression_list_opt
 %type <selectExpr> select_expression
 %type <expr> expression
-%type <expr> string_expression
 %type <tableExprs> from_opt table_references
 %type <tableExpr> table_reference table_factor join_table
 %type <joinCondition> join_condition join_condition_opt on_expression_opt
@@ -242,7 +241,7 @@ func init() {
 %type <str> compare
 %type <ins> insert_data
 %type <expr> value value_expression num_val
-%type <expr> string_function_call_keyword function_call_keyword function_call_nonkeyword function_call_generic function_call_conflict
+%type <expr> function_call_keyword function_call_nonkeyword function_call_generic function_call_conflict
 %type <str> is_suffix
 %type <colTuple> col_tuple
 %type <exprs> expression_list
@@ -2171,14 +2170,6 @@ expression_list:
     $$ = append($1, $3)
   }
 
-string_expression:
-  STRING
-  {
-    $$ = NewStrVal($1)
-  }
-| string_function_call_keyword
-
-
 value_expression:
   value
   {
@@ -2200,7 +2191,7 @@ value_expression:
   {
     $$ = $1
   }
-| string_expression CONCAT string_expression
+| expression CONCAT expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: StringConcat, Right: $3}
   }
@@ -2327,7 +2318,6 @@ value_expression:
     // will be non-trivial because of grammar conflicts.
     $$ = &IntervalExpr{Expr: $2}
   }
-| string_expression
 | function_call_generic
 | function_call_keyword
 | function_call_nonkeyword
@@ -2392,11 +2382,7 @@ function_call_keyword:
   {
     $$ = &ValuesFuncExpr{Name: $3}
   }
-
-/* TODO: Cast as string */
-
-string_function_call_keyword:
-SUBSTR openb column_name ',' value_expression closeb
+| SUBSTR openb column_name ',' value_expression closeb
   {
     $$ = &SubstrExpr{Name: $3, From: $5, To: nil}
   }

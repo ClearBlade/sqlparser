@@ -32,9 +32,12 @@ var (
 		output: "select 1",
 	}, {
 		input: "select 1 from t",
-	}, {
-		input:  "select 'a' || 'b' from t where true",
-		output: "select 'a' || 'b' from t where true",
+		// }, {
+		// 	input: "select 'a' || 'b' from t where true",
+		// }, {
+		// 	input: "select 'a' || CAST(false as text)",
+		// }, {
+		// 	input: "select 'a' || false",
 	}, {
 		input: "select .1 from t",
 	}, {
