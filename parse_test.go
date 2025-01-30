@@ -32,12 +32,16 @@ var (
 		output: "select 1",
 	}, {
 		input: "select 1 from t",
-		// }, {
-		// 	input: "select 'a' || 'b' from t where true",
-		// }, {
-		// 	input: "select 'a' || CAST(false as text)",
-		// }, {
-		// 	input: "select 'a' || false",
+	}, {
+		input: "select 'a' || 'b' from t where true",
+	}, {
+		input:  "select 'a' || CAST(false as text)",
+		output: "select 'a' || CAST(false AS text)",
+	}, {
+		input: "select 'a' || false from t where true",
+	}, {
+		input:  "SELECT COALESCE('[' || GROUP_CONCAT(tags.label, ', ') || ']', '[]') AS tags  FROM assets AS root LEFT JOIN assets_tags ON root.id = assets_tags.asset_id LEFT JOIN tags ON tags.item_id = assets_tags.tag_id;",
+		output: "select COALESCE('[' || group_concat(tags.label, ', ') || ']', '[]') as tags from assets as root left join assets_tags on root.id = assets_tags.asset_id left join tags on tags.item_id = assets_tags.tag_id",
 	}, {
 		input: "select .1 from t",
 	}, {
@@ -2125,7 +2129,7 @@ var (
 		excludeMulti: true,
 	}, {
 		input:  "select /* || */ 1 from t where a = b || a = c",
-		output: "syntax error: unexpected CONCAT at position 40",
+		output: "syntax error: unexpected '=' at position 44",
 	}, {
 		input:        "select /* aa",
 		output:       "syntax error: unexpected LEX_ERROR at position 13 near '/* aa'",

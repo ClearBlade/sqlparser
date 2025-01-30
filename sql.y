@@ -2191,7 +2191,7 @@ value_expression:
   {
     $$ = $1
   }
-| expression CONCAT expression
+| value_expression CONCAT value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: StringConcat, Right: $3}
   }
