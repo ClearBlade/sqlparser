@@ -31,6 +31,8 @@ var (
 		input:  "select 1",
 		output: "select 1",
 	}, {
+		input: "select 1 from t",
+	}, {
 		input: `select '["a", "b"]' ?| array['a', 'b']`,
 	}, {
 		input: "select .1 from t",
