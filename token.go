@@ -812,6 +812,7 @@ exit:
 
 func (tkn *Tokenizer) scanString(delim uint16, typ int) (int, []byte) {
 	var buffer bytes2.Buffer
+	buffer.WriteByte(byte(delim))
 	for {
 		ch := tkn.lastChar
 		if ch == eofChar {
@@ -859,6 +860,7 @@ func (tkn *Tokenizer) scanString(delim uint16, typ int) (int, []byte) {
 
 		} else if ch == delim && tkn.lastChar != delim {
 			// Correctly terminated string, which is not a double delim.
+			buffer.WriteByte(byte(ch))
 			break
 		}
 
