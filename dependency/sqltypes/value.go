@@ -318,25 +318,13 @@ func (v *Value) UnmarshalJSON(b []byte) error {
 	return err
 }
 
-// OLD
 func encodeBytesSQL(val []byte, b BinWriter) {
-	// TODO: Should we check this length?
-	delim := val[0]
-	contents := val[1 : len(val)-1]
-
 	buf := &bytes2.Buffer{}
-	// buf.WriteByte('\'')
-	buf.WriteByte(delim)
-	for _, ch := range contents {
-		if ch == '\'' && ch == delim {
+	buf.WriteByte('\'')
+	for _, ch := range val {
+		if ch == '\'' {
 			// escape single quotes by doubling them up
 			buf.WriteByte(ch)
-			buf.WriteByte(ch)
-			// } else if ch =='"' && ch == delim {
-			// 	// TODO: HANDLE
-			// }
-		} else if (ch == '\'' || ch == '"') && ch != delim {
-			// Don't need to escape single quote in double quoted string or vice versa
 			buf.WriteByte(ch)
 		} else if encodedChar := SQLEncodeMap[ch]; encodedChar == DontEscape {
 			buf.WriteByte(ch)
@@ -345,14 +333,10 @@ func encodeBytesSQL(val []byte, b BinWriter) {
 			buf.WriteByte(encodedChar)
 		}
 	}
-	buf.WriteByte(delim)
+	buf.WriteByte('\'')
 	b.Write(buf.Bytes())
 }
 
-// /**
-//  * Since postgres only allows literals to be single quoted, but mysql allows both single and double quotes, we need
-//  * some special logic in here.
-//  */
 // func encodeBytesSQL(val []byte, b BinWriter) {
 // 	// TODO: Should we check this length?
 // 	delim := val[0]
@@ -402,7 +386,6 @@ var SQLDecodeMap [256]byte
 
 var encodeRef = map[byte]byte{
 	'\x00': '0',
-	'"':    '"',
 	'\b':   'b',
 	'\n':   'n',
 	'\r':   'r',
