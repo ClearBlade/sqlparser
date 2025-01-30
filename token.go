@@ -528,7 +528,6 @@ func (tkn *Tokenizer) Scan() (int, []byte) {
 			}
 			return int(ch), nil
 		case '|':
-			// TODO: Don't do this
 			if tkn.lastChar == '|' {
 				tkn.next()
 				return CONCAT, nil
