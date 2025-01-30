@@ -2199,7 +2199,6 @@ value_expression:
   {
     $$ = &BinaryExpr{Left: $1, Operator: BitAndStr, Right: $3}
   }
-  // TODO: This is the issue
 | value_expression '|' value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: BitOrStr, Right: $3}
