@@ -380,7 +380,7 @@ func TestEncode(t *testing.T) {
 		outASCII: "'Zm9v'",
 	}, {
 		in:       TestValue(VarChar, "\x00'\"\b\n\r\t\x1A\\"),
-		outSQL:   "'\\0''\\\"\\b\\n\\r\\t\\Z\\\\'",
+		outSQL:   "'\\0''\"\\b\\n\\r\\t\\Z\\\\'",
 		outASCII: "'ACciCAoNCRpc'",
 	}}
 	for _, tcase := range testcases {
