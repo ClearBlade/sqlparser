@@ -286,9 +286,6 @@ var (
 	}, {
 		input: "select /* or */ 1 from t where a = b or a = c",
 	}, {
-		input:  "select /* || */ 1 from t where a = b || a = c",
-		output: "select /* || */ 1 from t where a = b or a = c",
-	}, {
 		input: "select /* not */ 1 from t where not a = b",
 	}, {
 		input: "select /* ! */ 1 from t where a = !1",
@@ -2123,6 +2120,9 @@ var (
 		input:        "select 'aa\\",
 		output:       "syntax error: unexpected LEX_ERROR at position 12 near 'aa'",
 		excludeMulti: true,
+	}, {
+		input:  "select /* || */ 1 from t where a = b || a = c",
+		output: "syntax error: unexpected CONCAT at position 40",
 	}, {
 		input:        "select /* aa",
 		output:       "syntax error: unexpected LEX_ERROR at position 13 near '/* aa'",
