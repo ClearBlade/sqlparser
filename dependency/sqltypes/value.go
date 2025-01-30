@@ -337,36 +337,6 @@ func encodeBytesSQL(val []byte, b BinWriter) {
 	b.Write(buf.Bytes())
 }
 
-// func encodeBytesSQL(val []byte, b BinWriter) {
-// 	// TODO: Should we check this length?
-// 	delim := val[0]
-// 	contents := val[1 : len(val)-1]
-
-// 	buf := &bytes2.Buffer{}
-// 	// buf.WriteByte('\'')
-// 	buf.WriteByte(delim)
-// 	for _, ch := range contents {
-// 		if ch == '\'' && ch == delim {
-// 			// escape single quotes by doubling them up
-// 			buf.WriteByte(ch)
-// 			buf.WriteByte(ch)
-// 			// } else if ch =='"' && ch == delim {
-// 			// 	// TODO: HANDLE
-// 			// }
-// 		} else if (ch == '\'' || ch == '"') && ch != delim {
-// 			// Don't need to escape single quote in double quoted string or vice versa
-// 			buf.WriteByte(ch)
-// 		} else if encodedChar := SQLEncodeMap[ch]; encodedChar == DontEscape {
-// 			buf.WriteByte(ch)
-// 		} else {
-// 			buf.WriteByte('\\')
-// 			buf.WriteByte(encodedChar)
-// 		}
-// 	}
-// 	buf.WriteByte(delim)
-// 	b.Write(buf.Bytes())
-// }
-
 func encodeBytesASCII(val []byte, b BinWriter) {
 	buf := &bytes2.Buffer{}
 	buf.WriteByte('\'')
