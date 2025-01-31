@@ -137,7 +137,7 @@ func init() {
 // Some of these operators don't conflict in our situation. Nevertheless,
 // it's better to have these listed in the correct order. Also, we don't
 // support all operators yet.
-%left <bytes> OR
+%left <bytes> OR CONCAT
 %left <bytes> AND
 %right <bytes> NOT '!'
 %left <bytes> BETWEEN CASE WHEN THEN ELSE END
@@ -2191,6 +2191,10 @@ value_expression:
   {
     $$ = $1
   }
+| value_expression CONCAT value_expression
+  {
+    $$ = &BinaryExpr{Left: $1, Operator: StringConcat, Right: $3}
+  }
 | value_expression '&' value_expression
   {
     $$ = &BinaryExpr{Left: $1, Operator: BitAndStr, Right: $3}
@@ -2405,7 +2409,6 @@ function_call_keyword:
   {
     $$ = &ValuesFuncExpr{Name: $3}
   }
-
 /*
   Function calls using non reserved keywords but with special syntax forms.
   Dedicated grammar rules are needed because of the special syntax

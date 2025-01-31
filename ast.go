@@ -2618,6 +2618,7 @@ const (
 	ModStr                 = "%"
 	ShiftLeftStr           = "<<"
 	ShiftRightStr          = ">>"
+	StringConcat           = "||"
 	JSONExtractOp          = "->"
 	JSONUnquoteExtractOp   = "->>"
 	JSONSubObjectOp        = "#>"
