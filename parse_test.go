@@ -33,6 +33,8 @@ var (
 	}, {
 		input: "select 1 from t",
 	}, {
+		input: `select '["a", "b"]' ?| array['a', 'b']`,
+	}, {
 		input: "select .1 from t",
 	}, {
 		input: "select 1.2e1 from t",
@@ -449,7 +451,7 @@ var (
 		input: "select /* literal backslash in string */ 'a\\\\na' from t",
 	}, {
 		input:  "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
-		output: "select /* all escapes */ '\\0''\\\"\\b\\n\\r\\t\\Z\\\\' from t",
+		output: "select /* all escapes */ '\\0''\"\\b\\n\\r\\t\\Z\\\\' from t",
 	}, {
 		input:  "select /* non-escape */ '\\x' from t",
 		output: "select /* non-escape */ 'x' from t",
