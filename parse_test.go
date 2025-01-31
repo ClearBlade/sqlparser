@@ -43,6 +43,8 @@ var (
 		input:  "SELECT COALESCE('[' || GROUP_CONCAT(tags.label, ', ') || ']', '[]') AS tags  FROM assets AS root LEFT JOIN assets_tags ON root.id = assets_tags.asset_id LEFT JOIN tags ON tags.item_id = assets_tags.tag_id;",
 		output: "select COALESCE('[' || group_concat(tags.label, ', ') || ']', '[]') as tags from assets as root left join assets_tags on root.id = assets_tags.asset_id left join tags on tags.item_id = assets_tags.tag_id",
 	}, {
+		input: `select '["a", "b"]' ?| array['a', 'b']`,
+	}, {
 		input: "select .1 from t",
 	}, {
 		input: "select 1.2e1 from t",
@@ -456,7 +458,7 @@ var (
 		input: "select /* literal backslash in string */ 'a\\\\na' from t",
 	}, {
 		input:  "select /* all escapes */ '\\0\\'\\\"\\b\\n\\r\\t\\Z\\\\' from t",
-		output: "select /* all escapes */ '\\0''\\\"\\b\\n\\r\\t\\Z\\\\' from t",
+		output: "select /* all escapes */ '\\0''\"\\b\\n\\r\\t\\Z\\\\' from t",
 	}, {
 		input:  "select /* non-escape */ '\\x' from t",
 		output: "select /* non-escape */ 'x' from t",
